@@ -36,3 +36,6 @@ dist-ssr
 
 # Uploaded profile images
 school-role-based-backend/uploads/
+
+# Installers / large binaries
+*.deb
