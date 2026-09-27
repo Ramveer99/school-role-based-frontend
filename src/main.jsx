@@ -7,7 +7,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
 const basename = import.meta.env.BASE_URL.replace(/\/$/, '') || '/';
 createRoot(document.getElementById('root')).render(<StrictMode>
-    <BrowserRouter basename={basename}>
+    <BrowserRouter basename="/web">
       <AuthProvider>
         <ToastProvider>
           <App />
