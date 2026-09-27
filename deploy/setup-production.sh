@@ -8,16 +8,20 @@ cd "$ROOT"
 echo "==> Building frontend (same-origin /api paths)"
 VITE_API_BASE_URL= npm run build
 
-echo "==> Starting PM2 processes"
+echo "==> Starting PM2 processes (API :8787, frontend :8080 with SPA fallback)"
+pm2 delete serve 2>/dev/null || true
 pm2 startOrRestart ecosystem.config.cjs
 pm2 save
 
 echo "==> Local validation"
-echo "App (expect text/html React app, not a directory listing):"
-curl -sS -i http://127.0.0.1:8080/web/ | head -8
+echo "App root (expect 302 redirect to /web/):"
+curl -sS -i http://127.0.0.1:8080/ | head -5
 echo ""
-echo "API health (expect JSON):"
-curl -sS -i http://127.0.0.1:8080/api/health | head -8
+echo "Login route (expect 200 text/html, NOT 404):"
+curl -sS -i http://127.0.0.1:8080/web/login | head -8
+echo ""
+echo "API health (expect JSON on :8787, or via Nginx /api/):"
+curl -sS -i http://127.0.0.1:8787/api/health | head -8
 
 echo ""
 echo "==> Next: configure Nginx (see deploy/nginx/educore.conf)"

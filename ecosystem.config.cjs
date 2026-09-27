@@ -12,7 +12,20 @@ module.exports = {
       autorestart: true,
       env: {
         NODE_ENV: 'production',
-        PORT: 8080,
+        PORT: 8787,
+      },
+    },
+    {
+      name: 'educore-frontend',
+      script: 'scripts/serve-frontend.mjs',
+      cwd: root,
+      instances: 1,
+      autorestart: true,
+      interpreter: 'node',
+      env: {
+        NODE_ENV: 'production',
+        FRONTEND_PORT: 8080,
+        STATIC_BASE_PATH: '/web',
       },
     },
   ],

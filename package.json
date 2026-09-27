@@ -14,6 +14,7 @@
     "normalize:users": "npm --prefix school-role-based-backend run normalize:users",
     "build": "vite build && node scripts/sync-backend-dist.mjs",
     "start:frontend": "node scripts/serve-frontend.mjs",
+    "start:prod": "npm run build && pm2 startOrRestart ecosystem.config.cjs",
     "serve": "npm run build && npm run start:api",
     "lint": "eslint .",
     "preview": "vite preview"

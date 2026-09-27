@@ -1,10 +1,7 @@
-import { createRequire } from 'node:module';
 import fs from 'node:fs';
+import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-
-const require = createRequire(import.meta.url);
-const express = require('../school-role-based-backend/node_modules/express');
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const base = (process.env.STATIC_BASE_PATH || '/web').replace(/\/$/, '') || '/web';
@@ -25,36 +22,97 @@ function resolveStaticDir() {
 }
 
 const staticDir = resolveStaticDir();
+const indexPath = path.join(staticDir, 'index.html');
 
-if (!fs.existsSync(path.join(staticDir, 'index.html'))) {
-  console.error(`[frontend] Missing ${staticDir}/index.html — run "npm run build" first.`);
+if (!fs.existsSync(indexPath)) {
+  console.error(`[frontend] Missing ${indexPath} — run "npm run build" first.`);
   process.exit(1);
 }
 
-const app = express();
-
-const sendIndex = (req, res, next) => {
-  if (req.method !== 'GET' && req.method !== 'HEAD') return next();
-  res.sendFile(path.join(staticDir, 'index.html'), (err) => {
-    if (err) next(err);
-  });
+const mimeTypes = {
+  '.css': 'text/css; charset=utf-8',
+  '.html': 'text/html; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.svg': 'image/svg+xml',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.gif': 'image/gif',
+  '.ico': 'image/x-icon',
+  '.woff': 'font/woff',
+  '.woff2': 'font/woff2',
 };
 
-app.use(base, express.static(staticDir, { index: 'index.html' }));
-app.get(base, (_req, res) => res.redirect(301, baseWithSlash));
-app.get(baseWithSlash, sendIndex);
-app.get(`${base}/*`, (req, res, next) => {
-  const lastSegment = req.path.split('/').pop() || '';
-  if (path.extname(lastSegment)) return next();
-  sendIndex(req, res, next);
-});
-app.get('/', (_req, res) => res.redirect(302, baseWithSlash));
+function sendFile(res, filePath, statusCode = 200) {
+  const ext = path.extname(filePath).toLowerCase();
+  const type = mimeTypes[ext] || 'application/octet-stream';
+  res.writeHead(statusCode, { 'Content-Type': type });
+  fs.createReadStream(filePath).pipe(res);
+}
 
-app.use((_req, res) => {
-  res.status(404).send('Not found');
+function sendIndex(res) {
+  sendFile(res, indexPath);
+}
+
+function redirect(res, location, statusCode = 302) {
+  res.writeHead(statusCode, { Location: location });
+  res.end();
+}
+
+const server = http.createServer((req, res) => {
+  const url = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
+  const pathname = decodeURIComponent(url.pathname);
+
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    res.writeHead(405);
+    res.end('Method not allowed');
+    return;
+  }
+
+  if (pathname === '/') {
+    redirect(res, baseWithSlash);
+    return;
+  }
+
+  if (pathname === base) {
+    redirect(res, baseWithSlash, 301);
+    return;
+  }
+
+  if (pathname === baseWithSlash) {
+    sendIndex(res);
+    return;
+  }
+
+  if (pathname.startsWith(`${base}/`)) {
+    const relativePath = pathname.slice(base.length + 1);
+    const filePath = path.join(staticDir, relativePath);
+    const normalized = path.normalize(filePath);
+
+    if (!normalized.startsWith(staticDir)) {
+      res.writeHead(403);
+      res.end('Forbidden');
+      return;
+    }
+
+    if (fs.existsSync(normalized) && fs.statSync(normalized).isFile()) {
+      sendFile(res, normalized);
+      return;
+    }
+
+    const lastSegment = pathname.split('/').pop() || '';
+    if (!path.extname(lastSegment)) {
+      sendIndex(res);
+      return;
+    }
+  }
+
+  res.writeHead(404);
+  res.end('Not found');
 });
 
-app.listen(port, host, () => {
+server.listen(port, host, () => {
   const localHost = host === '0.0.0.0' ? 'localhost' : host;
   console.log(`[frontend] http://${localHost}:${port}${baseWithSlash}`);
   console.log(`[frontend] Static files: ${staticDir}`);
