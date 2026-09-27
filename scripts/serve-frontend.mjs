@@ -4,7 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const base = (process.env.STATIC_BASE_PATH || '/web').replace(/\/$/, '') || '/web';
+const base = (process.env.STATIC_BASE_PATH || '/').replace(/\/$/, '') || '';
 const baseWithSlash = `${base}/`;
 const port = Number(process.env.FRONTEND_PORT || 8080);
 const host = process.env.HOST || '0.0.0.0';
@@ -12,13 +12,13 @@ const host = process.env.HOST || '0.0.0.0';
 function resolveStaticDir() {
   if (process.env.STATIC_DIR) return path.resolve(process.env.STATIC_DIR);
   const candidates = [
-    path.join(root, 'dist', 'web'),
-    path.join(root, 'school-role-based-backend', 'dist', 'web'),
+    path.join(root, 'dist'),
+    path.join(root, 'school-role-based-backend', 'dist'),
   ];
   for (const dir of candidates) {
     if (fs.existsSync(path.join(dir, 'index.html'))) return dir;
   }
-  return path.join(root, 'dist', 'web');
+  return path.join(root, 'dist');
 }
 
 const staticDir = resolveStaticDir();
@@ -70,24 +70,34 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  if (pathname === '/') {
-    redirect(res, baseWithSlash);
-    return;
-  }
-
-  if (pathname === base) {
-    redirect(res, baseWithSlash, 301);
-    return;
-  }
-
-  if (pathname === baseWithSlash) {
+  if (pathname === '/' || pathname === base || pathname === baseWithSlash) {
     sendIndex(res);
     return;
   }
 
-  if (pathname.startsWith(`${base}/`)) {
+  if (base && pathname.startsWith(`${base}/`)) {
     const relativePath = pathname.slice(base.length + 1);
     const filePath = path.join(staticDir, relativePath);
+    const normalized = path.normalize(filePath);
+
+    if (!normalized.startsWith(staticDir)) {
+      res.writeHead(403);
+      res.end('Forbidden');
+      return;
+    }
+
+    if (fs.existsSync(normalized) && fs.statSync(normalized).isFile()) {
+      sendFile(res, normalized);
+      return;
+    }
+
+    const lastSegment = pathname.split('/').pop() || '';
+    if (!path.extname(lastSegment)) {
+      sendIndex(res);
+      return;
+    }
+  } else if (!base) {
+    const filePath = path.join(staticDir, pathname.slice(1));
     const normalized = path.normalize(filePath);
 
     if (!normalized.startsWith(staticDir)) {

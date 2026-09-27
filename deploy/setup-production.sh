@@ -14,11 +14,11 @@ pm2 startOrRestart ecosystem.config.cjs
 pm2 save
 
 echo "==> Local validation"
-echo "App root (expect 302 redirect to /web/):"
-curl -sS -i http://127.0.0.1:8080/ | head -5
+echo "App root (expect 200 text/html):"
+curl -sS -i http://127.0.0.1:8080/ | head -8
 echo ""
 echo "Login route (expect 200 text/html, NOT 404):"
-curl -sS -i http://127.0.0.1:8080/web/login | head -8
+curl -sS -i http://127.0.0.1:8080/login | head -8
 echo ""
 echo "API health (expect JSON on :8787, or via Nginx /api/):"
 curl -sS -i http://127.0.0.1:8787/api/health | head -8

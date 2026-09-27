@@ -16,10 +16,9 @@ export default defineConfig(async ({ mode }) => {
         processEnvDefines[`process.env.${key}`] = JSON.stringify(value);
     }
     return {
-        base: '/web/',
+        base: '/',
         build: {
-            // Files must live under dist/web/ so `serve -s dist` resolves /web/assets/* correctly.
-            outDir: 'dist/web',
+            outDir: 'dist',
             emptyOutDir: true,
         },
         plugins,

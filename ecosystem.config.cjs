@@ -25,7 +25,7 @@ module.exports = {
       env: {
         NODE_ENV: 'production',
         FRONTEND_PORT: 8080,
-        STATIC_BASE_PATH: '/web',
+        STATIC_BASE_PATH: '/',
       },
     },
   ],
