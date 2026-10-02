@@ -1,10 +1,10 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { requestPasswordReset } from '../lib/auth';
 import { useToast } from '../contexts/ToastContext';
+import AuthShell from '../components/AuthShell';
 const DEMO = [
-    { role: 'super_admin', label: 'Super\nAdmin', email: 'superadmin@educore.edu', bg: 'bg-[#0F172A]', initials: 'SA', img: null },
+    // { role: 'super_admin', label: 'Super\nAdmin', email: 'superadmin@educore.edu', bg: 'bg-[#0F172A]', initials: 'SA', img: null },
     { role: 'admin', label: 'Admin', email: 'admin@greenwood.edu', bg: 'bg-[#2563EB]', initials: 'AD', img: null },
     { role: 'teacher', label: 'Teacher', email: 'sarah.j@greenwood.edu', bg: '', initials: 'T', img: 'https://i.pravatar.cc/100?img=32' },
     { role: 'student', label: 'Student', email: 'rahul.k@greenwood.edu', bg: '', initials: 'S', img: 'https://i.pravatar.cc/100?img=12' },
@@ -14,6 +14,11 @@ export default function Login() {
     const { signIn } = useAuth();
     const { toast } = useToast();
     const nav = useNavigate();
+    const [params] = useSearchParams();
+    useEffect(() => {
+        const token = params.get('token') || params.get('resetToken');
+        if (token) nav(`/reset-password?token=${encodeURIComponent(token)}`, { replace: true });
+    }, [params, nav]);
     const [email, setEmail] = useState('superadmin@educore.edu');
     const [password, setPassword] = useState('password123');
     const [remember, setRemember] = useState(true);
@@ -67,37 +72,9 @@ export default function Login() {
             setLoading(false);
         }
     };
-    return (<div className="min-h-screen flex items-center justify-center p-4 lg:p-8 bg-[#F1F5F9]">
-      <div className="w-full max-w-[1080px] bg-white rounded-[28px] shadow-[0_20px_60px_-16px_rgba(15,23,42,.12)] border border-slate-200 overflow-hidden grid lg:grid-cols-[1.05fr_0.95fr]">
-        <div className="hidden lg:flex flex-col p-10 bg-[#0F172A] text-white relative overflow-hidden">
-          <div className="absolute -top-24 -right-24 w-[420px] h-[420px] bg-[#2563EB] rounded-full blur-[80px] opacity-30"></div>
-          <div className="absolute -bottom-20 -left-20 w-[380px] h-[380px] bg-[#0EA5E9] rounded-full blur-[80px] opacity-20"></div>
-          <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-14">
-              <div className="w-10 h-10 rounded-xl bg-[#2563EB] flex items-center justify-center text-white"><i className="fa-solid fa-graduation-cap"></i></div>
-              <div><div className="font-display font-extrabold text-[17px] leading-none">EduCore</div><div className="text-[11px] tracking-[0.18em] text-slate-400 font-semibold">SCHOOL MANAGEMENT</div></div>
-            </div>
-            <h2 className="font-display text-[34px] font-extrabold leading-[0.95] mb-4">Empowering<br />Education<br /><span className="text-[#60A5FA]">Management.</span></h2>
-            <p className="text-slate-400 text-sm leading-relaxed mb-10 max-w-[360px]">A unified platform for administrators, teachers, students and parents — simple, fast and secure.</p>
-            <div className="space-y-4 text-sm">
-              <div className="flex items-center gap-3"><span className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center"><i className="fa-solid fa-check text-xs"></i></span> Role-based access & permissions</div>
-              <div className="flex items-center gap-3"><span className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center"><i className="fa-solid fa-check text-xs"></i></span> Multi-tenant organizations</div>
-              <div className="flex items-center gap-3"><span className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center"><i className="fa-solid fa-check text-xs"></i></span> Trusted by 1,200+ schools</div>
-            </div>
-            <div className="mt-10 bg-white/10 backdrop-blur rounded-2xl p-4 border border-white/10 flex items-center gap-3">
-              <img src="https://i.pravatar.cc/100?img=33" className="w-10 h-10 rounded-full object-cover"/>
-              <div className="flex-1"><div className="text-sm font-semibold">“EduCore cut our admin time by 60%.”</div><div className="text-xs text-slate-400">— Principal, Greenwood Academy</div></div>
-            </div>
-          </div>
-        </div>
-
-        <form onSubmit={submit} className="p-7 lg:p-10">
-          <div className="lg:hidden flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-[#2563EB] flex items-center justify-center text-white"><i className="fa-solid fa-graduation-cap"></i></div>
-            <div><div className="font-display font-extrabold leading-none">EduCore</div><div className="text-[11px] tracking-widest text-slate-500 font-semibold">SCHOOL MANAGEMENT</div></div>
-          </div>
-          <h1 className="font-display text-[26px] font-extrabold leading-none">Welcome Back</h1>
-          <p className="text-slate-500 text-sm mt-2 mb-7">Sign in to your account</p>
+    return (
+      <AuthShell title="Welcome Back" subtitle="Sign in to your account">
+        <form onSubmit={submit}>
 
           <div className="space-y-4">
             <div>
@@ -121,22 +98,7 @@ export default function Login() {
               <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
                 <input type="checkbox" checked={remember} onChange={e => setRemember(e.target.checked)} className="w-4 h-4 rounded border-slate-300 text-[#2563EB]"/> Remember me
               </label>
-              <button type="button" onClick={async () => {
-                if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                  setEmailErr('Enter your email above first');
-                  return;
-                }
-                try {
-                  const data = await requestPasswordReset(email);
-                  toast(data.message || 'If that email exists, a reset link was sent.');
-                  if (data.resetToken) {
-                    console.info('Dev reset token:', data.resetToken);
-                  }
-                }
-                catch (err) {
-                  toast(err.message || 'Could not send reset email', 'error');
-                }
-              }} className="text-sm font-semibold text-[#2563EB] hover:underline">Forgot password?</button>
+              <Link to="/forgot-password" className="text-sm font-semibold text-[#2563EB] hover:underline">Forgot password?</Link>
             </div>
             <button type="submit" disabled={loading} className="w-full h-[46px] rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-semibold text-sm flex items-center justify-center gap-2 transition disabled:opacity-70">
               {loading ? (<><span>Signing in...</span><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span></>) : (<><span>Sign In</span><i className="fa-solid fa-arrow-right text-xs"></i></>)}
@@ -154,6 +116,6 @@ export default function Login() {
             <p className="text-[11px] text-slate-400 text-center mt-3">Click any role to instantly login • Password is <b>password123</b></p>
           </div>
         </form>
-      </div>
-    </div>);
+      </AuthShell>
+    );
 }
