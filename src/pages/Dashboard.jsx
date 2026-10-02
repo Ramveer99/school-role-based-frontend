@@ -75,6 +75,8 @@ export default function Dashboard() {
         { label: 'Parents', value: counts.parents ?? 0, icon: 'fa-people-roof', color: 'bg-violet-50 text-violet-700', trend: 'Linked' },
     ];
 
+    const isAdmin = profile.role === 'admin' || profile.role === 'super_admin';
+    const showStudentList = isAdmin || profile.role === 'parent';
     const listTitle = profile.role === 'parent' ? 'My Children' : 'Recent Admissions';
     const listSubtitle = profile.role === 'parent'
         ? 'Students linked to your account'
@@ -103,8 +105,8 @@ export default function Dashboard() {
           </div>))}
       </div>
 
-      <div className="grid lg:grid-cols-[1.5fr_1fr] gap-6">
-        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+      <div className={`grid gap-6 ${showStudentList ? 'lg:grid-cols-[1.5fr_1fr]' : ''}`}>
+        {showStudentList && (<div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
           <div className="p-5 flex items-center justify-between border-b border-slate-100">
             <div><div className="font-bold">{listTitle}</div><div className="text-xs text-slate-500">{listSubtitle}</div></div>
             <Link to="/students" className="text-xs font-bold text-[#2563EB]">View all</Link>
@@ -122,7 +124,7 @@ export default function Dashboard() {
                 {s.status && (<span className={`px-2.5 py-1 rounded-full text-xs font-bold ${s.status === 'Active' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>{s.status}</span>)}
               </div>))}
           </div>
-        </div>
+        </div>)}
 
         <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
           <div className="p-5 flex items-center justify-between border-b border-slate-100">
@@ -145,7 +147,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-4">
+      <div className={`grid gap-4 ${isAdmin ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
         <div className="bg-gradient-to-br from-[#2563EB] to-[#1D4ED8] rounded-2xl p-6 text-white">
           <div className="text-xs font-bold tracking-widest opacity-80">ATTENDANCE</div>
           <div className="text-2xl font-extrabold mt-1">{loading ? '—' : `${attendanceRate}%`}</div>
@@ -153,12 +155,12 @@ export default function Dashboard() {
           <div className="h-1.5 bg-white/20 rounded-full mt-4 overflow-hidden"><div className="h-full bg-white rounded-full" style={{ width: `${attendanceRate}%` }}></div></div>
           <div className="text-xs mt-2 opacity-70">{attendanceLabel}</div>
         </div>
-        <div className="bg-white rounded-2xl border border-slate-200 p-6">
+        {isAdmin && (<div className="bg-white rounded-2xl border border-slate-200 p-6">
           <div className="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mb-3"><i className="fa-solid fa-wallet"></i></div>
           <div className="font-bold">Fees Summary</div>
           <div className="text-sm text-slate-500 mt-1">{loading ? '—' : `${formatCurrency(fees.collected)} collected`}</div>
           <div className="text-xs mt-3 text-slate-500">{loading ? '—' : `${formatCurrency(fees.pending)} pending`}</div>
-        </div>
+        </div>)}
         <div className="bg-white rounded-2xl border border-slate-200 p-6">
           <div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-3"><i className="fa-solid fa-award"></i></div>
           <div className="font-bold">{profile.role === 'parent' ? 'Child Overview' : 'Top Performance'}</div>
