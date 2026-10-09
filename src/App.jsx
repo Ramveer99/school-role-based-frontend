@@ -22,6 +22,8 @@ import Timetable from './pages/Timetable';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import Organizations from './pages/Organizations';
+import OrganizationStudents from './pages/OrganizationStudents';
+import DefaultPassword from './pages/DefaultPassword';
 import GenericPage from './pages/GenericPage';
 export default function App() {
     return (<Routes>
@@ -32,6 +34,8 @@ export default function App() {
         <Route path="/" element={<Navigate to="/dashboard" replace/>}/>
         <Route path="/dashboard" element={<Dashboard />}/>
         <Route path="/organizations" element={<Organizations />}/>
+        <Route path="/organizations/:organizationId/students" element={<OrganizationStudents />}/>
+        <Route path="/default-password" element={<DefaultPassword />}/>
         <Route path="/students" element={<Students />}/>
         <Route path="/students/new" element={<NewAdmission />}/>
         <Route path="/teachers" element={<Teachers />}/>

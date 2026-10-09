@@ -1,28 +1,49 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
+import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import ImageUploadField from '../components/ImageUploadField';
 const DEPTS = ['Mathematics', 'Science', 'English', 'Social Science', 'Computer Science', 'Commerce', 'Arts', 'Physical Education'];
 export default function AddTeacher() {
     const { toast } = useToast();
+    const { profile } = useAuth();
     const nav = useNavigate();
+    const [defaultPassword, setDefaultPassword] = useState('');
     const [f, setF] = useState({
         full_name: '', email: '', phone: '', employee_id: '',
         department: 'Mathematics', subjects: '', classes: '', status: 'Active', joining_date: new Date().toISOString().slice(0, 10),
     });
     const [photo, setPhoto] = useState(null);
     const [saving, setSaving] = useState(false);
+    useEffect(() => {
+        const orgId = profile?.organization_id;
+        if (!orgId) return;
+        let active = true;
+        api.get(`/api/organizations/${orgId}/default-password`)
+            .then((data) => { if (active) setDefaultPassword(data.default_password || ''); })
+            .catch((err) => { if (active) toast(err.message || 'Could not load the school default password', 'error'); });
+        return () => { active = false; };
+    }, [profile?.organization_id]);
     const submit = async (e) => {
         e.preventDefault();
         if (!f.full_name || !f.email || !f.employee_id) {
             toast('Please fill required fields', 'error');
             return;
         }
+        if (!defaultPassword) {
+            toast('School default password is not available yet', 'error');
+            return;
+        }
         setSaving(true);
         try {
-            await api.post('/api/teachers', { ...f, ...(photo ? { avatar_image: photo } : {}) });
-            toast('Teacher added successfully. Login: ' + f.email + ' / password123');
+            await api.post('/api/teachers', {
+                ...f,
+                email: f.email.trim(),
+                password: defaultPassword,
+                ...(photo ? { avatar_image: photo } : {}),
+            });
+            toast('Teacher added successfully. Login: ' + f.email.trim() + ' / ' + defaultPassword);
             nav('/teachers');
         }
         catch (e) {
@@ -103,7 +124,7 @@ export default function AddTeacher() {
           </div>
           <div className="p-5 border-t border-slate-100 flex justify-end gap-3">
             <Link to="/teachers" className="h-10 px-5 rounded-xl border border-slate-200 font-semibold text-sm flex items-center">Cancel</Link>
-            <button type="submit" disabled={saving} className="h-10 px-6 rounded-xl bg-[#2563EB] text-white font-bold text-sm disabled:opacity-70">{saving ? 'Saving...' : 'Save Teacher'}</button>
+            <button type="submit" disabled={saving || !defaultPassword} className="h-10 px-6 rounded-xl bg-[#2563EB] text-white font-bold text-sm disabled:opacity-70">{saving ? 'Saving...' : 'Save Teacher'}</button>
           </div>
         </div>
 
@@ -115,7 +136,7 @@ export default function AddTeacher() {
             </div>
             <div className="text-xs text-slate-500 space-y-2">
               <div className="flex justify-between"><span>Email</span><span className="font-mono text-slate-800">{f.email || 'teacher@school.edu'}</span></div>
-              <div className="flex justify-between"><span>Password</span><span className="font-mono text-slate-800">password123</span></div>
+              <div className="flex justify-between gap-3"><span>Password</span><span className="font-mono text-slate-800 break-all text-right">{defaultPassword || 'Loading...'}</span></div>
             </div>
             <p className="text-[11px] text-slate-400 mt-3">The teacher can sign in immediately with these credentials. Ask them to change the password after first login.</p>
           </div>

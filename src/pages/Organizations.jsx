@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 export default function Organizations() {
     const { profile } = useAuth();
     const { toast } = useToast();
+    const nav = useNavigate();
     const [rows, setRows] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
@@ -86,7 +88,9 @@ export default function Organizations() {
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         {loading && <div className="col-span-full text-center text-slate-400 py-8">Loading...</div>}
         {!loading && rows.length === 0 && <div className="col-span-full text-center text-slate-400 py-8 bg-white rounded-2xl border border-slate-200">No organizations yet.</div>}
-        {rows.map((o) => (<div key={o.id} className="bg-white rounded-2xl border border-slate-200 p-5">
+        {rows.map((o) => {
+            const orgId = o.id || o._id;
+            return (<div key={orgId} role="button" tabIndex={0} onClick={() => nav(`/organizations/${orgId}/students`, { state: { name: o.name, code: o.code } })} onKeyDown={(e) => { if (e.key === 'Enter') nav(`/organizations/${orgId}/students`, { state: { name: o.name, code: o.code } }); }} className="bg-white rounded-2xl border border-slate-200 p-5 text-left cursor-pointer hover:border-[#2563EB] hover:shadow-sm transition">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#2563EB] to-[#0EA5E9] text-white flex items-center justify-center font-extrabold">{o.code?.slice(0, 2)}</div>
@@ -104,9 +108,10 @@ export default function Organizations() {
               {o.phone && <div><i className="fa-solid fa-phone w-4"></i> {o.phone}</div>}
             </div>
             <div className="mt-4 flex justify-end">
-              <button onClick={() => toggle(o.id, o.active)} className="text-xs font-bold text-[#2563EB] hover:underline">{o.active ? 'Deactivate' : 'Activate'}</button>
+              <button type="button" onClick={(e) => { e.stopPropagation(); toggle(orgId, o.active); }} className="text-xs font-bold text-[#2563EB] hover:underline">{o.active ? 'Deactivate' : 'Activate'}</button>
             </div>
-          </div>))}
+          </div>);
+        })}
       </div>
     </div>);
 }
