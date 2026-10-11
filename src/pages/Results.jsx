@@ -3,17 +3,29 @@ import { api } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { resultStudentId, gradeColor, pctToGrade, studentScore, buildRankMap } from '../lib/resultUtils';
+import RecordModal, { FormField } from '../components/RecordModal';
+
+const emptyResultForm = {
+    student_id: '',
+    exam_id: '',
+    marks_obtained: '',
+};
 
 export default function Results() {
     const { profile } = useAuth();
     const { toast } = useToast();
     const [results, setResults] = useState([]);
     const [students, setStudents] = useState([]);
+    const [exams, setExams] = useState([]);
     const [roleMeta, setRoleMeta] = useState({});
     const [selectedStudentId, setSelectedStudentId] = useState('');
+    const [showPostResult, setShowPostResult] = useState(false);
+    const [resultForm, setResultForm] = useState(emptyResultForm);
+    const [saving, setSaving] = useState(false);
     const [loading, setLoading] = useState(true);
 
     const canManage = profile && (profile.role === 'admin' || profile.role === 'super_admin' || profile.role === 'teacher');
+    const canPostResults = profile && (profile.role === 'admin' || profile.role === 'super_admin');
 
     const load = useCallback(async () => {
         if (!profile) return;
@@ -26,9 +38,13 @@ export default function Results() {
             if (canManage) {
                 requests.push(api.get('/api/students').catch(() => []));
             }
-            const [resultsData, dashboard, studentRows = []] = await Promise.all(requests);
+            if (canPostResults) {
+                requests.push(api.get('/api/exams').catch(() => []));
+            }
+            const [resultsData, dashboard, studentRows = [], examRows = []] = await Promise.all(requests);
             setResults(resultsData);
             setStudents(studentRows);
+            setExams(examRows);
             setRoleMeta(dashboard?.role_specific ?? {});
 
             if (profile.role === 'parent') {
@@ -36,14 +52,14 @@ export default function Results() {
                 if (childId) setSelectedStudentId(childId);
             } else if (profile.role !== 'student') {
                 const firstWithResults = resultsData.map(resultStudentId).find(Boolean);
-                if (firstWithResults) setSelectedStudentId(firstWithResults);
+                setSelectedStudentId(firstWithResults || studentRows[0]?.id || '');
             }
         } catch (e) {
             toast(e.message, 'error');
         } finally {
             setLoading(false);
         }
-    }, [profile, canManage, toast]);
+    }, [profile, canManage, canPostResults, toast]);
 
     useEffect(() => { load(); }, [load]);
 
@@ -97,16 +113,54 @@ export default function Results() {
                 label: `${c.full_name} (${c.class_grade}-${c.section})`,
             }));
         }
-        const idsWithResults = new Set(results.map(resultStudentId));
         return students
-            .filter((s) => idsWithResults.has(s.id))
             .map((s) => ({
                 id: s.id,
                 label: `${s.full_name} (${s.class_grade}-${s.section})`,
             }));
-    }, [profile, roleMeta, students, results]);
+    }, [profile, roleMeta, students]);
 
     const canPickStudent = profile?.role === 'admin' || profile?.role === 'super_admin' || profile?.role === 'teacher' || profile?.role === 'parent';
+    const studentExams = exams.filter((exam) => {
+        const student = students.find((row) => row.id === resultForm.student_id);
+        return student && String(exam.class_grade) === String(student.class_grade);
+    });
+    const selectedExam = exams.find((exam) => String(exam.id) === String(resultForm.exam_id));
+
+    const closePostResult = () => {
+        setShowPostResult(false);
+        setResultForm(emptyResultForm);
+    };
+
+    const postResult = async (e) => {
+        e.preventDefault();
+        const obtained = Number(resultForm.marks_obtained);
+        const total = Number(selectedExam?.total_marks);
+        if (!resultForm.student_id || !resultForm.exam_id) {
+            toast('Select a student and an exam', 'error');
+            return;
+        }
+        if (!Number.isFinite(obtained) || !Number.isFinite(total) || total <= 0 || obtained < 0 || obtained > total) {
+            toast(`Enter marks between 0 and ${total || 'the exam total'}`, 'error');
+            return;
+        }
+
+        setSaving(true);
+        try {
+            await api.post('/api/exams/results', {
+                exam_id: resultForm.exam_id,
+                student_id: resultForm.student_id,
+                marks_obtained: obtained,
+            });
+            toast('Result posted');
+            closePostResult();
+            setResults(await api.get('/api/exams/results'));
+        } catch (e) {
+            toast(e.message, 'error');
+        } finally {
+            setSaving(false);
+        }
+    };
 
     return (
         <div className="p-4 lg:p-6">
@@ -120,6 +174,15 @@ export default function Results() {
                         Avg. {averagePerformance.toFixed(1)}%
                     </span>
                 )}
+                {canPostResults && (
+                    <button
+                        type="button"
+                        onClick={() => setShowPostResult(true)}
+                        className="h-10 px-4 rounded-xl bg-[#2563EB] text-white text-sm font-bold flex items-center gap-2"
+                    >
+                        <i className="fa-solid fa-plus"></i> Post Result
+                    </button>
+                )}
             </div>
 
             {loading ? (
@@ -132,11 +195,12 @@ export default function Results() {
                                 ? `Results — ${selectedStudent.full_name} (${selectedStudent.class_grade}-${selectedStudent.section})`
                                 : 'Exam Results'}
                         </div>
-                        {canPickStudent && studentOptions.length > 1 && (
+                        {canPickStudent && studentOptions.length > 0 && (
                             <select
                                 value={selectedStudentId}
                                 onChange={(e) => setSelectedStudentId(e.target.value)}
                                 className="h-9 px-3 rounded-xl border border-slate-200 bg-[#F8FAFC] text-sm font-semibold"
+                                aria-label="Select student"
                             >
                                 {studentOptions.map((s) => (
                                     <option key={s.id} value={s.id}>{s.label}</option>
@@ -198,6 +262,56 @@ export default function Results() {
                     )}
                 </div>
             )}
+
+            <RecordModal
+                open={showPostResult}
+                onClose={closePostResult}
+                title="Post Student Result"
+                footer={(
+                    <form onSubmit={postResult} className="flex justify-end gap-3">
+                        <button type="button" onClick={closePostResult} className="h-10 px-5 rounded-xl border border-slate-200 font-semibold text-sm">Cancel</button>
+                        <button type="submit" disabled={saving || !resultForm.student_id} className="h-10 px-5 rounded-xl bg-[#2563EB] text-white font-bold text-sm disabled:opacity-60">
+                            {saving ? 'Posting...' : 'Post Result'}
+                        </button>
+                    </form>
+                )}
+            >
+                <div className="space-y-4">
+                    <FormField label="Student" required>
+                        <select
+                            value={resultForm.student_id}
+                            onChange={(e) => setResultForm({ ...emptyResultForm, student_id: e.target.value })}
+                            className="w-full h-11 px-3 rounded-xl border border-slate-200 bg-white text-sm"
+                            required
+                        >
+                            <option value="">Select a student first</option>
+                            {students.map((student) => (
+                                <option key={student.id} value={student.id}>
+                                    {student.full_name} ({student.class_grade}-{student.section})
+                                </option>
+                            ))}
+                        </select>
+                    </FormField>
+                    {resultForm.student_id && (
+                        <>
+                            <FormField label="Exam" required>
+                                <select value={resultForm.exam_id} onChange={(e) => setResultForm({ ...resultForm, exam_id: e.target.value, marks_obtained: '' })} className="w-full h-11 px-3 rounded-xl border border-slate-200 bg-white text-sm" required>
+                                    <option value="">Select an exam</option>
+                                    {studentExams.map((exam) => (
+                                        <option key={exam.id} value={exam.id}>{exam.title} · {exam.subject} · {exam.total_marks} marks</option>
+                                    ))}
+                                </select>
+                                {studentExams.length === 0 && <p className="mt-1 text-xs text-amber-700">No exams are scheduled for this student’s class.</p>}
+                            </FormField>
+                            {selectedExam && (
+                                <FormField label={`Marks Obtained (out of ${selectedExam.total_marks})`} required>
+                                    <input type="number" min="0" max={selectedExam.total_marks} step="any" value={resultForm.marks_obtained} onChange={(e) => setResultForm({ ...resultForm, marks_obtained: e.target.value })} className="w-full h-11 px-3 rounded-xl border border-slate-200 text-sm" required />
+                                </FormField>
+                            )}
+                        </>
+                    )}
+                </div>
+            </RecordModal>
         </div>
     );
 }

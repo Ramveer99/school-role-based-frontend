@@ -145,6 +145,7 @@ export default function Students() {
                 <th className="text-left px-4 py-3">Class</th>
                 <th className="text-left px-4 py-3">Parent</th>
                 <th className="text-left px-4 py-3">Phone</th>
+                <th className="text-left px-4 py-3">Email</th>
                 <th className="text-left px-4 py-3">Teacher</th>
                 <th className="text-left px-4 py-3">Status</th>
                 <th className="text-right px-4 py-3">Actions</th>
@@ -161,6 +162,7 @@ export default function Students() {
                   <td className="px-4 py-3"><span className="px-2.5 py-1 rounded-full bg-blue-50 text-[#2563EB] text-xs font-bold">{s.class_grade}-{s.section}</span></td>
                   <td className="px-4 py-3">{s.parent_name || <span className="text-slate-400">—</span>}</td>
                   <td className="px-4 py-3 text-slate-500">{s.phone || '—'}</td>
+                   <td className="px-4 py-3 text-slate-500">{s.email || '—'}</td>
                   <td className="px-4 py-3">{s.teacher_name || <span className="text-slate-400">Unassigned</span>}</td>
                   <td className="px-4 py-3"><span className={`px-2.5 py-1 rounded-full text-xs font-bold ${s.status === 'Active' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>{s.status}</span></td>
                   <td className="px-4 py-3 text-right">
@@ -196,6 +198,7 @@ export default function Students() {
               <DetailField label="Gender" value={viewRecord.gender}/>
               <DetailField label="Date of Birth" value={viewRecord.dob ? new Date(viewRecord.dob).toLocaleDateString() : null}/>
               <DetailField label="Phone" value={viewRecord.phone}/>
+              <DetailField label="Email" value={viewRecord.email}/>
               <DetailField label="Teacher" value={viewRecord.teacher_name}/>
               <DetailField label="Parent" value={viewRecord.parent_name || viewRecord.parent?.full_name}/>
               <DetailField label="Parent Email" value={viewRecord.parent?.email}/>

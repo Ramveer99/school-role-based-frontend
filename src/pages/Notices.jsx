@@ -36,7 +36,7 @@ export default function Notices() {
             toast(e.message, 'error');
         }
     };
-    const canPost = profile && (profile.role === 'admin' || profile.role === 'super_admin' || profile.role === 'teacher');
+    const canPost = profile && ['admin', 'teacher'].includes(profile.role);
     return (<div className="p-4 lg:p-6">
       <div className="flex flex-wrap items-center justify-between gap-4 mb-5">
         <div><h2 className="font-display font-extrabold text-xl">Notices & Announcements</h2><p className="text-sm text-slate-500">School-wide communications</p></div>

@@ -1,8 +1,12 @@
+import fs from 'node:fs'
 import { spawn } from 'node:child_process'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
+const backendDir = path.join(root, 'school-role-based-backend')
+const backendPackageJson = path.join(backendDir, 'package.json')
+const hasBackend = fs.existsSync(backendPackageJson)
 
 function run(command, args, name, color) {
   const child = spawn(command, args, {
@@ -37,11 +41,18 @@ function run(command, args, name, color) {
   return child
 }
 
-const api = run('npm', ['--prefix', 'school-role-based-backend', 'run', 'dev'], 'api', '36')
-const web = run('npx', ['vite'], 'web', '32')
+const api = hasBackend
+  ? run('npm', ['--prefix', 'school-role-based-backend', 'run', 'dev'], 'api', '36')
+  : null
+
+if (!hasBackend) {
+  console.warn('[api] school-role-based-backend/package.json not found — starting frontend only.')
+}
+
+const web = run('npx', ['vite', ...process.argv.slice(2)], 'web', '32')
 
 const shutdown = () => {
-  api.kill('SIGTERM')
+  if (api) api.kill('SIGTERM')
   web.kill('SIGTERM')
   process.exit(0)
 }

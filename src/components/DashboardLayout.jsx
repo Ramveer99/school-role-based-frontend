@@ -4,6 +4,19 @@ import { useAuth } from '../contexts/AuthContext';
 import { MENU } from './menu';
 import { useToast } from '../contexts/ToastContext';
 import { resolveAvatarUrl } from '../lib/avatar';
+import { api } from '../lib/api';
+
+function relativeTime(value) {
+  const timestamp = new Date(value).getTime();
+  if (!Number.isFinite(timestamp)) return 'Recently';
+  const minutes = Math.round((timestamp - Date.now()) / 60000);
+  const formatter = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' });
+  if (Math.abs(minutes) < 60) return formatter.format(minutes, 'minute');
+  const hours = Math.round(minutes / 60);
+  if (Math.abs(hours) < 24) return formatter.format(hours, 'hour');
+  return formatter.format(Math.round(hours / 24), 'day');
+}
+
 const roleLabel = {
     super_admin: 'Super Admin', admin: 'Admin', teacher: 'Teacher', student: 'Student', parent: 'Parent',
 };
@@ -14,8 +27,25 @@ export default function DashboardLayout() {
     const loc = useLocation();
     const [sbOpen, setSbOpen] = useState(false);
     const [notifOpen, setNotifOpen] = useState(false);
+    const [notifications, setNotifications] = useState([]);
+    const [notificationsLoading, setNotificationsLoading] = useState(true);
+    const [notificationsError, setNotificationsError] = useState('');
     const [pmOpen, setPmOpen] = useState(false);
     useEffect(() => { setSbOpen(false); setNotifOpen(false); setPmOpen(false); }, [loc.pathname]);
+    useEffect(() => {
+      let active = true;
+      api.get('/api/notices')
+        .then(rows => {
+          if (active) setNotifications(Array.isArray(rows) ? rows : []);
+        })
+        .catch(error => {
+          if (active) setNotificationsError(error.message || 'Unable to load notices');
+        })
+        .finally(() => {
+          if (active) setNotificationsLoading(false);
+        });
+      return () => { active = false; };
+    }, [profile?.id]);
     const items = useMemo(() => (profile ? MENU[profile.role] : []), [profile]);
     const crumb = useMemo(() => {
         const seg = loc.pathname.split('/').filter(Boolean)[0] || 'dashboard';
@@ -83,9 +113,9 @@ export default function DashboardLayout() {
             <input placeholder="Search students, teachers, classes..." className="w-full h-10 pl-9 pr-4 rounded-xl border border-slate-200 bg-[#F8FAFC] text-sm placeholder:text-slate-400"/>
           </div>
           <div className="ml-auto flex items-center gap-2 lg:gap-3 relative">
-            <button onClick={() => { setNotifOpen(!notifOpen); setPmOpen(false); }} className="relative w-10 h-10 rounded-xl border border-slate-200 bg-white flex items-center justify-center hover:bg-slate-50">
+            <button onClick={() => { setNotifOpen(!notifOpen); setPmOpen(false); }} aria-label="Toggle notifications" aria-expanded={notifOpen} className="relative w-10 h-10 rounded-xl border border-slate-200 bg-white flex items-center justify-center hover:bg-slate-50">
               <i className="fa-regular fa-bell text-slate-600"></i>
-              <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#EF4444] text-white text-[10px] font-bold flex items-center justify-center">3</span>
+              {notifications.length > 0 && <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-[#EF4444] text-white text-[10px] font-bold flex items-center justify-center">{notifications.length > 99 ? '99+' : notifications.length}</span>}
             </button>
             <div className="hidden sm:flex items-center gap-3 pl-3 border-l border-slate-200">
               <div className="text-right hidden lg:block">
@@ -98,13 +128,25 @@ export default function DashboardLayout() {
               </button>
             </div>
             {notifOpen && (<div className="absolute right-0 top-[52px] w-[360px] bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden z-30">
-                <div className="p-4 border-b flex items-center justify-between"><span className="font-bold">Notifications</span><span className="text-xs bg-blue-50 text-[#2563EB] px-2 py-1 rounded-full font-semibold">3 new</span></div>
+                <div className="p-4 border-b flex items-center justify-between"><span className="font-bold">Notifications</span><span className="text-xs bg-blue-50 text-[#2563EB] px-2 py-1 rounded-full font-semibold">{notifications.length} {notifications.length === 1 ? 'notice' : 'notices'}</span></div>
                 <div className="divide-y max-h-[320px] overflow-y-auto">
-                  <div className="p-4 flex gap-3 hover:bg-slate-50"><span className="w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center shrink-0"><i className="fa-solid fa-triangle-exclamation text-xs"></i></span><div><div className="text-sm font-semibold">Fee payment overdue — Class 10-A</div><div className="text-xs text-slate-500">2 hours ago</div></div></div>
-                  <div className="p-4 flex gap-3 hover:bg-slate-50"><span className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0"><i className="fa-solid fa-file-lines text-xs"></i></span><div><div className="text-sm font-semibold">New assignment: Mathematics</div><div className="text-xs text-slate-500">5 hours ago</div></div></div>
-                  <div className="p-4 flex gap-3 hover:bg-slate-50"><span className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0"><i className="fa-solid fa-check text-xs"></i></span><div><div className="text-sm font-semibold">Attendance submitted — 10-A</div><div className="text-xs text-slate-500">Yesterday</div></div></div>
+                  {notificationsLoading && <div className="p-6 text-center text-sm text-slate-500">Loading notifications...</div>}
+                  {!notificationsLoading && notificationsError && <div role="alert" className="p-6 text-center text-sm text-red-600">{notificationsError}</div>}
+                  {!notificationsLoading && !notificationsError && notifications.length === 0 && <div className="p-6 text-center text-sm text-slate-500">No notifications yet.</div>}
+                  {!notificationsLoading && !notificationsError && notifications.slice(0, 5).map(notice => {
+                    const colors = {
+                      amber: 'bg-amber-100 text-amber-700',
+                      emerald: 'bg-emerald-100 text-emerald-700',
+                      violet: 'bg-violet-100 text-violet-700',
+                      blue: 'bg-blue-100 text-blue-700',
+                    };
+                    return <div key={notice.id} className="p-4 flex gap-3 hover:bg-slate-50">
+                      <span className={`w-8 h-8 rounded-full ${colors[notice.color] || colors.blue} flex items-center justify-center shrink-0`}><i className="fa-solid fa-bullhorn text-xs"></i></span>
+                      <div className="min-w-0"><div className="text-sm font-semibold">{notice.title}</div>{notice.description && <div className="text-xs text-slate-500 line-clamp-2">{notice.description}</div>}<div className="text-xs text-slate-500 mt-1">{relativeTime(notice.created_at)}</div></div>
+                    </div>;
+                  })}
                 </div>
-                <button onClick={() => setNotifOpen(false)} className="w-full py-3 text-sm font-semibold text-[#2563EB] bg-slate-50">View all notifications</button>
+                <Link to="/notices" onClick={() => setNotifOpen(false)} className="block w-full py-3 text-center text-sm font-semibold text-[#2563EB] bg-slate-50">View all notifications</Link>
               </div>)}
             {pmOpen && (<div className="absolute right-0 top-[52px] w-[240px] bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-30">
                 <div className="px-3 py-3 flex items-center gap-3"><img src={avatar} className="w-10 h-10 rounded-full bg-white"/><div><div className="text-sm font-semibold">{profile.full_name}</div><div className="text-xs text-slate-500 truncate w-[140px]">{profile.email}</div></div></div>

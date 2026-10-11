@@ -2,6 +2,8 @@ export const MENU = {
     super_admin: [
         { id: 'dashboard', label: 'Dashboard', icon: 'fa-table-columns', path: '/dashboard' },
         { id: 'organizations', label: 'Organizations', icon: 'fa-building', path: '/organizations' },
+         { id: 'payment', label: 'Payment', icon: 'fa-credit-card', path: '/payment' },
+
         { id: 'default-password', label: 'Default Password', icon: 'fa-key', path: '/default-password' },
         // { id: 'students', label: 'Students', icon: 'fa-user-graduate', path: '/students' },
         // { id: 'teachers', label: 'Teachers', icon: 'fa-chalkboard-user', path: '/teachers' },
@@ -15,6 +17,7 @@ export const MENU = {
         // { id: 'payroll', label: 'Payroll', icon: 'fa-money-bill-trend-up', path: '/payroll' },
         // { id: 'notices', label: 'Notices', icon: 'fa-bullhorn', path: '/notices', badge: true },
         // { id: 'reports', label: 'Reports', icon: 'fa-chart-pie', path: '/reports' },
+        
         { id: 'settings', label: 'Settings', icon: 'fa-gear', path: '/settings' },
         { id: 'audit-logs', label: 'Audit Logs', icon: 'fa-clock-rotate-left', path: '/audit-logs' },
     ],

@@ -17,6 +17,7 @@ import Exams from './pages/Exams';
 import AddExam from './pages/AddExam';
 import Results from './pages/Results';
 import Fees from './pages/Fees';
+import Payment from './pages/Payment';
 import Notices from './pages/Notices';
 import Timetable from './pages/Timetable';
 import Profile from './pages/Profile';
@@ -35,6 +36,9 @@ export default function App() {
         <Route path="/dashboard" element={<Dashboard />}/>
         <Route path="/organizations" element={<Organizations />}/>
         <Route path="/organizations/:organizationId/students" element={<OrganizationStudents />}/>
+        <Route path="/organizations/:organizationId/teachers" element={<OrganizationStudents />}/>
+        <Route path="/organizations/:organizationId/payment" element={<OrganizationStudents />}/>
+        <Route path="/organizations/:organizationId/parents" element={<OrganizationStudents />}/>
         <Route path="/default-password" element={<DefaultPassword />}/>
         <Route path="/students" element={<Students />}/>
         <Route path="/students/new" element={<NewAdmission />}/>
@@ -48,6 +52,7 @@ export default function App() {
         <Route path="/exams/new" element={<AddExam />}/>
         <Route path="/results" element={<Results />}/>
         <Route path="/fees" element={<Fees />}/>
+        <Route path="/payment" element={<Payment />}/>
         <Route path="/notices" element={<Notices />}/>
         <Route path="/timetable" element={<Timetable />}/>
         <Route path="/profile" element={<Profile />}/>

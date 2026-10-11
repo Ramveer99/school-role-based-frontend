@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useLocation, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
@@ -9,8 +9,21 @@ import { AvatarImg } from '../components/Avatar';
 const TABS = [
     { id: 'students', label: 'Students', noun: 'students', subtitle: 'Students belonging to this school' },
     { id: 'teachers', label: 'Teachers', noun: 'teachers', subtitle: 'Teachers belonging to this school' },
+    // { id: 'payments', label: 'Payment', noun: 'payments', subtitle: 'Payment records for this school' },
     { id: 'parents', label: 'Parents', noun: 'parents', subtitle: 'Parents belonging to this school' },
 ];
+
+function money(value) {
+    if (value === null || value === undefined || value === '') return '—';
+    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Number(value || 0));
+}
+
+function shortDate(value) {
+    if (!value) return '—';
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return '—';
+    return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+}
 
 function asList(payload, tab) {
     if (Array.isArray(payload)) return payload;
@@ -32,9 +45,17 @@ function rowId(row) {
 export default function OrganizationStudents() {
     const { organizationId } = useParams();
     const location = useLocation();
+    const navigate = useNavigate();
     const { profile } = useAuth();
     const { toast } = useToast();
-    const [tab, setTab] = useState('students');
+    const tabFromPath = (() => {
+        const last = location.pathname.split('/').filter(Boolean).pop();
+        if (last === 'payment' || last === 'payments') return 'payments';
+        if (last === 'teachers') return 'teachers';
+        if (last === 'parents') return 'parents';
+        return 'students';
+    })();
+    const [tab, setTab] = useState(tabFromPath);
     const [orgName, setOrgName] = useState(location.state?.name || '');
     const [rows, setRows] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -51,6 +72,12 @@ export default function OrganizationStudents() {
         setLoading(true);
         setRows([]);
         try {
+            if (nextTab === 'payments') {
+                const payload = await api.get(`/api/organizations/${organizationId}/ledger/payments`);
+                const list = Array.isArray(payload?.data) ? payload.data : Array.isArray(payload) ? payload : [];
+                setRows(list);
+                return;
+            }
             const payload = await api.get(`/api/organizations/${organizationId}/${nextTab}`);
             setRows(asList(payload, nextTab));
         }
@@ -82,6 +109,11 @@ export default function OrganizationStudents() {
     const switchTab = (next) => {
         if (next === tab) return;
         setTab(next);
+        if (next === 'payments') {
+            navigate(`/organizations/${organizationId}/payment`, { state: { name: orgName || location.state?.name || '' } });
+        } else {
+            navigate(`/organizations/${organizationId}/${next}`, { state: { name: orgName || location.state?.name || '' } });
+        }
         setQ('');
         setCls('');
         setSec('');
@@ -111,6 +143,14 @@ export default function OrganizationStudents() {
                 return false;
             return true;
         }
+        if (tab === 'payments') {
+            const paymentText = `${r.description || ''} ${r.reference || ''} ${r.payment_method || ''}`.toLowerCase();
+            if (q && !paymentText.includes(query))
+                return false;
+            if (status && (r.status || '').toLowerCase() !== status.toLowerCase())
+                return false;
+            return true;
+        }
         if (q && !name.includes(query) && !r.email?.toLowerCase().includes(query))
             return false;
         return true;
@@ -118,6 +158,7 @@ export default function OrganizationStudents() {
 
     const openView = async (row) => {
         const id = rowId(row);
+        console.log("row", row);
         if (tab !== 'students' || !id) {
             setViewRecord(row);
             return;
@@ -241,6 +282,34 @@ export default function OrganizationStudents() {
                   </tr>))}
               </tbody>
             </>)}
+            {/* {tab === 'payments' && (<>
+              <thead className="bg-[#F8FAFC] text-[11px] font-bold tracking-widest text-slate-500">
+                <tr>
+                  <th className="text-left px-4 py-3">Description</th>
+                  <th className="text-left px-4 py-3">Reference</th>
+                  <th className="text-left px-4 py-3">Date</th>
+                  <th className="text-left px-4 py-3">Amount</th>
+                  <th className="text-left px-4 py-3">Method</th>
+                  <th className="text-left px-4 py-3">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {loading && <tr><td colSpan={6} className="px-4 py-8 text-center text-slate-400">Loading...</td></tr>}
+                {!loading && filtered.length === 0 && <tr><td colSpan={6} className="px-4 py-10 text-center text-slate-400">No payment records in this organization.</td></tr>}
+                {!loading && filtered.map((p, idx) => {
+                    const amount = Number((p.amount_paise ?? p.amount ?? 0) / 100 || 0);
+                    const paymentStatus = p.status || 'recorded';
+                    return (<tr key={p.id || `${p.reference || 'payment'}-${idx}`} className="hover:bg-slate-50/60">
+                      <td className="px-4 py-3 font-semibold">{p.description || 'Payment'}</td>
+                      <td className="px-4 py-3 font-mono text-xs">{p.reference || '—'}</td>
+                      <td className="px-4 py-3 text-slate-600">{shortDate(p.date || p.created_at)}</td>
+                      <td className="px-4 py-3 font-semibold text-slate-700">{money(amount)}</td>
+                      <td className="px-4 py-3 text-slate-600">{p.payment_method || '—'}</td>
+                      <td className="px-4 py-3"><span className={`px-2.5 py-1 rounded-full text-xs font-bold ${paymentStatus === 'recorded' ? 'bg-emerald-50 text-emerald-700' : paymentStatus === 'reversed' ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-700'}`}>{paymentStatus}</span></td>
+                    </tr>);
+                })}
+              </tbody>
+            </>)} */}
             {tab === 'parents' && (<>
               <thead className="bg-[#F8FAFC] text-[11px] font-bold tracking-widest text-slate-500">
                 <tr>
@@ -278,6 +347,7 @@ export default function OrganizationStudents() {
 
       <RecordModal open={!!viewRecord && tab === 'students'} onClose={() => setViewRecord(null)} title="Student Details">
         {viewRecord && tab === 'students' && (<div className="space-y-4">
+          {console.log("viewRecord", viewRecord)}
             <div className="flex items-center gap-4 pb-4 border-b border-slate-100">
               <AvatarImg src={viewRecord.avatar_url} name={viewRecord.full_name} colors="2563EB,0EA5E9,10B981" className="w-14 h-14 rounded-full bg-white object-cover border border-slate-200"/>
               <div>

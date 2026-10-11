@@ -12,6 +12,7 @@ export default function Organizations() {
     const [showForm, setShowForm] = useState(false);
     const [f, setF] = useState({ name: '', code: '', address: '', phone: '', email: '', admin_name: '', admin_email: '' });
     const [saving, setSaving] = useState(false);
+    const [deletingId, setDeletingId] = useState(null);
     const load = async () => {
         setLoading(true);
         try {
@@ -55,6 +56,21 @@ export default function Organizations() {
             toast(e.message, 'error');
         }
     };
+    const deleteOrganization = async (id, name) => {
+        if (!window.confirm(`Permanently delete ${name}? This cannot be undone.`)) return;
+        setDeletingId(id);
+        try {
+            await api.del(`/api/organizations/${id}`);
+            setRows(current => current.filter(organization => (organization.id || organization._id) !== id));
+            toast('Organization deleted');
+        }
+        catch (e) {
+            toast(e.message || 'Failed to delete organization', 'error');
+        }
+        finally {
+            setDeletingId(null);
+        }
+    };
     if (profile?.role !== 'super_admin')
         return <div className="p-6 text-slate-500">Only the Super Admin can access this section.</div>;
     return (<div className="p-4 lg:p-6">
@@ -90,13 +106,19 @@ export default function Organizations() {
         {!loading && rows.length === 0 && <div className="col-span-full text-center text-slate-400 py-8 bg-white rounded-2xl border border-slate-200">No organizations yet.</div>}
         {rows.map((o) => {
             const orgId = o.id || o._id;
-            return (<div key={orgId} role="button" tabIndex={0} onClick={() => nav(`/organizations/${orgId}/students`, { state: { name: o.name, code: o.code } })} onKeyDown={(e) => { if (e.key === 'Enter') nav(`/organizations/${orgId}/students`, { state: { name: o.name, code: o.code } }); }} className="bg-white rounded-2xl border border-slate-200 p-5 text-left cursor-pointer hover:border-[#2563EB] hover:shadow-sm transition">
+            return (<div key={orgId} role="button" tabIndex={0} onClick={() => nav(`/organizations/${orgId}/payment`, { state: { name: o.name, code: o.code } })} onKeyDown={(e) => { if (e.key === 'Enter') nav(`/organizations/${orgId}/payment`, { state: { name: o.name, code: o.code } }); }} className="bg-white rounded-2xl border border-slate-200 p-5 text-left cursor-pointer hover:border-[#2563EB] hover:shadow-sm transition">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#2563EB] to-[#0EA5E9] text-white flex items-center justify-center font-extrabold">{o.code?.slice(0, 2)}</div>
                 <div><div className="font-bold">{o.name}</div><div className="text-xs text-slate-500 font-mono">{o.code}</div></div>
               </div>
+              <div className='flex items-center gap-2'>
               <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${o.active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>{o.active ? 'Active' : 'Inactive'}</span>
+              {/* <span className='px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600'>hello</span> */}
+              {/* <span className='px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600'></span> */}
+              {/* <button type="button" title="Edit" onClick={() => openEdit(o.id)} className="w-8 h-8 rounded-lg hover:bg-slate-100 text-slate-500"><i className="fa-regular fa-pen-to-square text-xs"></i></button>
+              <button onClick={() => del(o.id)} className="w-8 h-8 rounded-lg hover:bg-red-50 text-red-500"><i className="fa-regular fa-trash-can text-xs"></i></button> */}
+              </div>
             </div>
             <div className="mt-4 grid grid-cols-3 gap-2 text-center">
               <div className="bg-slate-50 rounded-xl py-2"><div className="text-lg font-extrabold">{o.stats?.students ?? 0}</div><div className="text-[10px] text-slate-500 font-bold tracking-wider">STUDENTS</div></div>
@@ -106,9 +128,11 @@ export default function Organizations() {
             <div className="mt-4 text-xs text-slate-500 space-y-1">
               {o.email && <div><i className="fa-regular fa-envelope w-4"></i> {o.email}</div>}
               {o.phone && <div><i className="fa-solid fa-phone w-4"></i> {o.phone}</div>}
+              <div>Admin Email :{o.admin_email && <div><i className="fa-solid fa-user w-4"></i> {o.admin_email}</div>}</div>
             </div>
-            <div className="mt-4 flex justify-end">
+            <div className="mt-4 flex justify-end gap-4">
               <button type="button" onClick={(e) => { e.stopPropagation(); toggle(orgId, o.active); }} className="text-xs font-bold text-[#2563EB] hover:underline">{o.active ? 'Deactivate' : 'Activate'}</button>
+              <button type="button" disabled={deletingId === orgId} onClick={(e) => { e.stopPropagation(); deleteOrganization(orgId, o.name); }} className="text-xs font-bold text-red-600 hover:underline disabled:opacity-50">{deletingId === orgId ? 'Deleting...' : 'Delete'}</button>
             </div>
           </div>);
         })}
