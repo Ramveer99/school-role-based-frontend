@@ -1,4 +1,4 @@
--- EduCore school dashboard schema
+-- EduZaap school dashboard schema
 
 create extension if not exists "pgcrypto";
 

@@ -63,7 +63,7 @@ export default function DashboardLayout() {
         <div className="h-[68px] flex items-center px-5 border-b border-slate-100 shrink-0">
           <div className="w-9 h-9 rounded-xl bg-[#2563EB] flex items-center justify-center text-white"><i className="fa-solid fa-graduation-cap text-sm"></i></div>
           <div className="ml-3">
-            <div className="font-display font-extrabold text-[15px] leading-none">EduCore</div>
+            <div className="font-display font-extrabold text-[15px] leading-none">EduZaap</div>
             <div className="text-[10px] tracking-[0.14em] font-bold text-slate-400">SCHOOL ERP</div>
           </div>
           <button onClick={() => setSbOpen(false)} className="ml-auto lg:hidden w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center"><i className="fa-solid fa-xmark"></i></button>

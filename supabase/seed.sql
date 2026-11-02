@@ -73,7 +73,7 @@ begin
 end;
 $$;
 
-select private.seed_user('11111111-1111-1111-1111-111111111111', 'superadmin@educore.edu', 'password123', 'Super Admin', 'super_admin', null, null);
+select private.seed_user('11111111-1111-1111-1111-111111111111', 'superadmin@eduzaap.edu', 'password123', 'Super Admin', 'super_admin', null, null);
 select private.seed_user('22222222-2222-2222-2222-222222222222', 'admin@greenwood.edu', 'password123', 'Greenwood Admin', 'admin', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '+91 90000 11111');
 select private.seed_user('33333333-3333-3333-3333-333333333333', 'sarah.j@greenwood.edu', 'password123', 'Sarah Johnson', 'teacher', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '+91 90000 22222');
 select private.seed_user('44444444-4444-4444-4444-444444444444', 'rahul.k@greenwood.edu', 'password123', 'Rahul Kumar', 'student', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '+91 90000 33333');

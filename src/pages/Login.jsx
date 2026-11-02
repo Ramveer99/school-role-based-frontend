@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import AuthShell from '../components/AuthShell';
 const DEMO = [
-    // { role: 'super_admin', label: 'Super\nAdmin', email: 'superadmin@educore.edu', bg: 'bg-[#0F172A]', initials: 'SA', img: null },
+    // { role: 'super_admin', label: 'Super\nAdmin', email: 'superadmin@eduzaap.edu', bg: 'bg-[#0F172A]', initials: 'SA', img: null },
     { role: 'admin', label: 'Admin', email: 'admin@greenwood.edu', bg: 'bg-[#2563EB]', initials: 'AD', img: null },
     { role: 'teacher', label: 'Teacher', email: 'sarah.j@greenwood.edu', bg: '', initials: 'T', img: 'https://i.pravatar.cc/100?img=32' },
     { role: 'student', label: 'Student', email: 'rahul.k@greenwood.edu', bg: '', initials: 'S', img: 'https://i.pravatar.cc/100?img=12' },
@@ -19,7 +19,7 @@ export default function Login() {
         const token = params.get('token') || params.get('resetToken');
         if (token) nav(`/reset-password?token=${encodeURIComponent(token)}`, { replace: true });
     }, [params, nav]);
-    const [email, setEmail] = useState('superadmin@educore.edu');
+    const [email, setEmail] = useState('superadmin@eduzaap.edu');
     const [password, setPassword] = useState('password123');
     const [remember, setRemember] = useState(true);
     const [showPass, setShowPass] = useState(false);

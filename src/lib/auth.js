@@ -1,7 +1,7 @@
 import { apiUrl } from './config';
 
-const TOKEN_KEY = 'educore_token';
-const USER_KEY = 'educore_user';
+const TOKEN_KEY = 'eduZaap_token';
+const USER_KEY = 'eduZaap_user';
 
 export function getToken() {
   return localStorage.getItem(TOKEN_KEY);

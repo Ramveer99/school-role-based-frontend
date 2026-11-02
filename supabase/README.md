@@ -13,7 +13,7 @@ npm run dev                 # Vite + local API on :5173 / :8787
 - Mailpit: http://127.0.0.1:54324
 
 ## Demo logins (password: `password123`)
-- superadmin@educore.edu
+- superadmin@eduzaap.edu
 - admin@greenwood.edu
 - sarah.j@greenwood.edu
 - rahul.k@greenwood.edu

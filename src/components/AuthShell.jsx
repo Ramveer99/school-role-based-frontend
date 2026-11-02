@@ -8,7 +8,7 @@ export default function AuthShell({ title, subtitle, children }) {
           <div className="relative z-10">
             <div className="flex items-center gap-3 mb-14">
               <div className="w-10 h-10 rounded-xl bg-[#2563EB] flex items-center justify-center text-white"><i className="fa-solid fa-graduation-cap"></i></div>
-              <div><div className="font-display font-extrabold text-[17px] leading-none">EduCore</div><div className="text-[11px] tracking-[0.18em] text-slate-400 font-semibold">SCHOOL MANAGEMENT</div></div>
+              <div><div className="font-display font-extrabold text-[17px] leading-none">EduZaap</div><div className="text-[11px] tracking-[0.18em] text-slate-400 font-semibold">SCHOOL MANAGEMENT</div></div>
             </div>
             <h2 className="font-display text-[34px] font-extrabold leading-[0.95] mb-4">Empowering<br />Education<br /><span className="text-[#60A5FA]">Management.</span></h2>
             <p className="text-slate-400 text-sm leading-relaxed mb-10 max-w-[360px]">A unified platform for administrators, teachers, students and parents — simple, fast and secure.</p>
@@ -19,7 +19,7 @@ export default function AuthShell({ title, subtitle, children }) {
             </div>
             <div className="mt-10 bg-white/10 backdrop-blur rounded-2xl p-4 border border-white/10 flex items-center gap-3">
               <img src="https://i.pravatar.cc/100?img=33" className="w-10 h-10 rounded-full object-cover" alt="" />
-              <div className="flex-1"><div className="text-sm font-semibold">“EduCore cut our admin time by 60%.”</div><div className="text-xs text-slate-400">— Principal, Greenwood Academy</div></div>
+              <div className="flex-1"><div className="text-sm font-semibold">“EduZaap cut our admin time by 60%.”</div><div className="text-xs text-slate-400">— Principal, Greenwood Academy</div></div>
             </div>
           </div>
         </div>
@@ -27,7 +27,7 @@ export default function AuthShell({ title, subtitle, children }) {
         <div className="p-7 lg:p-10">
           <div className="lg:hidden flex items-center gap-3 mb-8">
             <div className="w-10 h-10 rounded-xl bg-[#2563EB] flex items-center justify-center text-white"><i className="fa-solid fa-graduation-cap"></i></div>
-            <div><div className="font-display font-extrabold leading-none">EduCore</div><div className="text-[11px] tracking-widest text-slate-500 font-semibold">SCHOOL MANAGEMENT</div></div>
+            <div><div className="font-display font-extrabold leading-none">EduZaap</div><div className="text-[11px] tracking-widest text-slate-500 font-semibold">SCHOOL MANAGEMENT</div></div>
           </div>
           <h1 className="font-display text-[26px] font-extrabold leading-none">{title}</h1>
           <p className="text-slate-500 text-sm mt-2 mb-7">{subtitle}</p>
