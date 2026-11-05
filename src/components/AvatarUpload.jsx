@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { Camera } from 'lucide-react';
-import { resolveAvatarUrl } from '../lib/avatar';
+import { AvatarImg } from './Avatar';
 
 export default function AvatarUpload({
   src,
@@ -39,12 +39,12 @@ export default function AvatarUpload({
     }
   };
 
-  const avatarSrc = resolveAvatarUrl(src, name, colors);
-
   return (
     <div className={`relative inline-flex ${className}`}>
-      <img
-        src={avatarSrc}
+      <AvatarImg
+        src={src}
+        name={name}
+        colors={colors}
         alt={name || 'Profile'}
         className={`${sizeClass} object-cover border-4 border-white shadow bg-white`}
       />

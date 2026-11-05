@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { MENU } from './menu';
-import { useToast } from '../contexts/ToastContext';
-import { resolveAvatarUrl } from '../lib/avatar';
+import { AvatarImg } from './Avatar';
 import { api } from '../lib/api';
 
 function relativeTime(value) {
@@ -22,7 +22,6 @@ const roleLabel = {
 };
 export default function DashboardLayout() {
     const { profile, signOut } = useAuth();
-    const { toast } = useToast();
     const nav = useNavigate();
     const loc = useLocation();
     const [sbOpen, setSbOpen] = useState(false);
@@ -31,6 +30,10 @@ export default function DashboardLayout() {
     const [notificationsLoading, setNotificationsLoading] = useState(true);
     const [notificationsError, setNotificationsError] = useState('');
     const [pmOpen, setPmOpen] = useState(false);
+    const [supportContactOpen, setSupportContactOpen] = useState(false);
+    const [openingWhatsApp, setOpeningWhatsApp] = useState(false);
+    const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
+    const [loggingOut, setLoggingOut] = useState(false);
     useEffect(() => { setSbOpen(false); setNotifOpen(false); setPmOpen(false); }, [loc.pathname]);
     useEffect(() => {
       let active = true;
@@ -56,7 +59,25 @@ export default function DashboardLayout() {
     }, [loc.pathname, items]);
     if (!profile)
         return null;
-    const avatar = resolveAvatarUrl(profile.avatar_url, profile.full_name, '2563EB,0EA5E9,0F172A,10B981,F59E0B');
+    const profileName = profile.full_name || profile.username || profile.email || 'User';
+    const confirmLogout = async () => {
+      setLoggingOut(true);
+      await signOut();
+      nav('/login');
+    };
+    const openWhatsApp = () => {
+      const whatsappWindow = window.open('about:blank', '_blank');
+      if (whatsappWindow) whatsappWindow.opener = null;
+      setOpeningWhatsApp(true);
+      window.setTimeout(() => {
+        if (whatsappWindow && !whatsappWindow.closed) {
+          whatsappWindow.location.href = 'https://wa.me/919536037022';
+        } else {
+          window.location.href = 'https://wa.me/919536037022';
+        }
+        setOpeningWhatsApp(false);
+      }, 700);
+    };
     return (<div className="h-screen flex overflow-hidden">
       {/* Sidebar */}
       <aside className={`fixed lg:static inset-y-0 left-0 z-40 w-[272px] bg-white border-r border-slate-200 flex flex-col transition-transform duration-300 ${sbOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
@@ -70,7 +91,7 @@ export default function DashboardLayout() {
         </div>
         <div className="px-4 py-4">
           <div className={`flex items-center gap-3 px-3 py-3 rounded-2xl border ${profile.role === 'super_admin' ? 'bg-[#0F172A] text-white border-slate-800' : 'bg-[#F8FAFC] border-slate-200'}`}>
-            <img src={avatar} className="w-9 h-9 rounded-full object-cover bg-white"/>
+            <AvatarImg src={profile.avatar_url} name={profileName} className="w-9 h-9 rounded-full object-cover bg-white"/>
             <div className="flex-1 min-w-0">
               <div className="text-sm font-semibold truncate">{profile.full_name}</div>
               <div className={`text-xs ${profile.role === 'super_admin' ? 'text-slate-400' : 'text-slate-500'}`}>{roleLabel[profile.role]}{profile.organization_name ? ` • ${profile.organization_name}` : ''}</div>
@@ -90,9 +111,9 @@ export default function DashboardLayout() {
             <div className="absolute -right-6 -top-6 w-20 h-20 bg-white/10 rounded-full"></div>
             <div className="text-xs font-semibold text-white/80">Need help?</div>
             <div className="text-sm font-bold">Support Center</div>
-            <button onClick={() => toast('Support ticket created')} className="mt-3 w-full h-8 rounded-xl bg-white text-slate-900 text-xs font-bold">Contact Support</button>
+            <button type="button" onClick={() => setSupportContactOpen(true)} className="mt-3 w-full h-8 rounded-xl bg-white text-slate-900 text-xs font-bold">Contact Support</button>
           </div>
-          <button onClick={async () => { await signOut(); nav('/login'); }} className="mt-3 w-full h-10 rounded-xl border border-slate-200 text-sm font-semibold flex items-center justify-center gap-2 hover:bg-slate-50">
+          <button onClick={() => setLogoutConfirmOpen(true)} className="mt-3 w-full h-10 rounded-xl border border-slate-200 text-sm font-semibold flex items-center justify-center gap-2 hover:bg-slate-50">
             <i className="fa-solid fa-right-from-bracket text-xs"></i> Log Out
           </button>
         </div>
@@ -123,7 +144,7 @@ export default function DashboardLayout() {
                 <div className="text-xs text-slate-500">{roleLabel[profile.role]}</div>
               </div>
               <button onClick={() => { setPmOpen(!pmOpen); setNotifOpen(false); }} className="relative">
-                <img src={avatar} className="w-10 h-10 rounded-full object-cover border-2 border-white shadow bg-white"/>
+                <AvatarImg src={profile.avatar_url} name={profileName} className="w-10 h-10 rounded-full object-cover border-2 border-white shadow bg-white"/>
                 <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full"></span>
               </button>
             </div>
@@ -149,11 +170,11 @@ export default function DashboardLayout() {
                 <Link to="/notices" onClick={() => setNotifOpen(false)} className="block w-full py-3 text-center text-sm font-semibold text-[#2563EB] bg-slate-50">View all notifications</Link>
               </div>)}
             {pmOpen && (<div className="absolute right-0 top-[52px] w-[240px] bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-30">
-                <div className="px-3 py-3 flex items-center gap-3"><img src={avatar} className="w-10 h-10 rounded-full bg-white"/><div><div className="text-sm font-semibold">{profile.full_name}</div><div className="text-xs text-slate-500 truncate w-[140px]">{profile.email}</div></div></div>
+                <div className="px-3 py-3 flex items-center gap-3"><AvatarImg src={profile.avatar_url} name={profileName} className="w-10 h-10 rounded-full bg-white"/><div><div className="text-sm font-semibold">{profile.full_name}</div><div className="text-xs text-slate-500 truncate w-[140px]">{profile.email}</div></div></div>
                 <div className="h-px bg-slate-100 my-1"></div>
                 <Link to="/profile" onClick={() => setPmOpen(false)} className="w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-50 text-sm flex items-center gap-2"><i className="fa-regular fa-user w-4"></i> My Profile</Link>
                 <Link to="/settings" onClick={() => setPmOpen(false)} className="w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-50 text-sm flex items-center gap-2"><i className="fa-solid fa-gear w-4"></i> Settings</Link>
-                <button onClick={async () => { await signOut(); nav('/login'); }} className="w-full text-left px-3 py-2.5 rounded-xl hover:bg-red-50 text-red-600 text-sm flex items-center gap-2"><i className="fa-solid fa-right-from-bracket w-4"></i> Logout</button>
+                <button onClick={() => { setPmOpen(false); setLogoutConfirmOpen(true); }} className="w-full text-left px-3 py-2.5 rounded-xl hover:bg-red-50 text-red-600 text-sm flex items-center gap-2"><i className="fa-solid fa-right-from-bracket w-4"></i> Logout</button>
               </div>)}
           </div>
         </header>
@@ -162,5 +183,45 @@ export default function DashboardLayout() {
           <Outlet />
         </main>
       </div>
+      {supportContactOpen && createPortal(<div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="absolute inset-0 bg-slate-950/50" aria-hidden="true" onMouseDown={() => setSupportContactOpen(false)}></div>
+        <section role="dialog" aria-modal="true" aria-labelledby="support-title" aria-describedby="support-description" className="relative w-full max-w-[420px] rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_24px_70px_-20px_rgba(15,23,42,0.35)] sm:p-7">
+          <div className="flex items-start gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 ring-1 ring-inset ring-emerald-100"><i className="fa-brands fa-whatsapp text-xl"></i></div>
+            <div className="min-w-0 flex-1 pt-0.5">
+              <h2 id="support-title" className="text-lg font-bold leading-6 text-slate-900">Support Center</h2>
+              <p id="support-description" className="mt-1 text-sm text-slate-500">Contact us on WhatsApp for help.</p>
+            </div>
+            <button type="button" aria-label="Close support details" onClick={() => setSupportContactOpen(false)} className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600"><i className="fa-solid fa-xmark"></i></button>
+          </div>
+          <div className="mt-6 rounded-xl bg-slate-50 p-4">
+            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">WhatsApp number</div>
+            <div className="mt-1 text-base font-semibold text-slate-900">+91 95360 37022</div>
+          </div>
+          <div className="mt-6 flex flex-col-reverse gap-2.5 sm:flex-row sm:justify-end">
+            <button type="button" onClick={() => setSupportContactOpen(false)} className="h-11 w-full rounded-xl border border-slate-200 px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 sm:w-auto">Close</button>
+            <button type="button" disabled={openingWhatsApp} onClick={openWhatsApp} className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-wait disabled:opacity-80 sm:w-auto">
+              <i className={openingWhatsApp ? 'fa-solid fa-spinner fa-spin' : 'fa-brands fa-whatsapp'}></i>
+              {openingWhatsApp ? 'Opening WhatsApp...' : 'Open WhatsApp'}
+            </button>
+          </div>
+        </section>
+      </div>, document.body)}
+      {logoutConfirmOpen && createPortal(<div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="absolute inset-0 bg-slate-950/50" aria-hidden="true" onMouseDown={() => { if (!loggingOut) setLogoutConfirmOpen(false); }}></div>
+        <section role="dialog" aria-modal="true" aria-labelledby="logout-title" aria-describedby="logout-description" className="relative w-full max-w-[420px] rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_24px_70px_-20px_rgba(15,23,42,0.35)] sm:p-7">
+          <div className="flex items-start gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-red-50 text-red-600 ring-1 ring-inset ring-red-100"><i className="fa-solid fa-right-from-bracket text-base"></i></div>
+            <div className="pt-0.5">
+              <h2 id="logout-title" className="text-lg font-bold leading-6 text-slate-900">Log out of your account?</h2>
+              <p id="logout-description" className="mt-2 text-sm leading-5 text-slate-500">You will need to sign in again to continue.</p>
+            </div>
+          </div>
+          <div className="mt-7 flex flex-col gap-2.5 sm:flex-row sm:justify-end">
+            <button type="button" disabled={loggingOut} onClick={() => setLogoutConfirmOpen(false)} className="h-11 w-full rounded-xl border border-slate-200 px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-60 sm:w-auto">Cancel</button>
+            <button type="button" disabled={loggingOut} onClick={confirmLogout} className="h-11 w-full rounded-xl bg-red-600 px-5 text-sm font-semibold text-white transition hover:bg-red-700 disabled:opacity-60 sm:w-auto">{loggingOut ? 'Logging out...' : 'Log Out'}</button>
+          </div>
+        </section>
+      </div>, document.body)}
     </div>);
 }

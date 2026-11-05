@@ -37,7 +37,7 @@ export default function Profile() {
           <div className="flex flex-wrap items-end gap-4 -mt-10 relative z-10">
             <AvatarUpload
               src={currentAvatar}
-              name={profile.full_name}
+              name={profile.full_name || profile.username || profile.email}
               onUpload={handleUpload}
             />
             <div className="pb-2">

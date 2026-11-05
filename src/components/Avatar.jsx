@@ -22,26 +22,16 @@
 //   );
 // }
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import {
-  avatarFallback,
   hasAvatar,
   resolveAvatarUrl,
 } from '../lib/avatar';
 
-const getInitials = (name = '') => {
-  const words = name.trim().split(/\s+/).filter(Boolean);
-
-  if (!words.length) return '?';
-
-  // First + second name
-  if (words.length >= 2) {
-    return `${words[0][0]}${words[1][0]}`.toUpperCase();
-  }
-
-  // Single name
-  return words[0][0].toUpperCase();
+const getInitialLetter = (name = '') => {
+  const firstCharacter = String(name).trim()[0];
+  return firstCharacter ? firstCharacter.toUpperCase() : '?';
 };
 
 export function AvatarImg({
@@ -51,25 +41,21 @@ export function AvatarImg({
   className = '',
   alt,
 }) {
-  const [failed, setFailed] = useState(false);
+  const [failedSrc, setFailedSrc] = useState(null);
 
-  useEffect(() => {
-    setFailed(false);
-  }, [src, name]);
-
-  const hasValidAvatar = hasAvatar(src) && !failed;
+  const hasValidAvatar = hasAvatar(src) && failedSrc !== src;
 
   if (!hasValidAvatar) {
     return (
       <div
-        className={`flex items-center justify-center rounded-full font-semibold ${className}`}
+        className={`flex items-center justify-center font-semibold ${className}`}
         style={{
           background: colors?.background || '#E5E7EB',
           color: colors?.color || '#374151',
         }}
         aria-label={alt || name || 'Avatar'}
       >
-        {getInitials(name)}
+        {getInitialLetter(name)}
       </div>
     );
   }
@@ -79,9 +65,7 @@ export function AvatarImg({
       src={resolveAvatarUrl(src, name, colors)}
       alt={alt || name || 'Avatar'}
       className={className}
-      onError={() => setFailed(true)}
+      onError={() => setFailedSrc(src)}
     />
   );
 }
-
-
