@@ -29,3 +29,34 @@ input:focus, select:focus, textarea:focus {
 
 @keyframes spin { to { transform: rotate(360deg); } }
 .animate-spin { animation: spin 0.8s linear infinite; }
+
+.results-print-only { display: none; }
+
+@media print {
+  @page { margin: 16mm; }
+
+  body { background: #fff !important; }
+  body * { visibility: hidden !important; }
+  .results-print-area,
+  .results-print-area * { visibility: visible !important; }
+  .results-print-area {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    overflow: visible !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+  .results-print-only { display: block !important; }
+  .results-print-hide { display: none !important; }
+  .results-print-area table { border-collapse: collapse; }
+  .results-print-area th,
+  .results-print-area td { border-bottom: 1px solid #cbd5e1 !important; }
+  .results-summary {
+    background: #f8fafc !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

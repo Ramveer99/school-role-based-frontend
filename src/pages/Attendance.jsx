@@ -95,6 +95,34 @@ export default function Attendance() {
     const late = filtered.filter((s) => status[s.id] === 'late').length;
     const pct = filtered.length ? Math.round((present / filtered.length) * 100) : 0;
 
+    const exportAttendance = () => {
+        const csvCell = (value) => {
+            const text = String(value ?? '');
+            const safeText = /^[\s]*[=+\-@\t\r]/.test(text) ? `'${text}` : text;
+            return `"${safeText.replace(/"/g, '""')}"`;
+        };
+        const rows = [
+            ['Student', 'Roll Number', 'Class', 'Date', 'Status'],
+            ...filtered.map((student) => [
+                student.full_name,
+                student.roll_no,
+                cls,
+                date,
+                status[student.id] || 'present',
+            ]),
+        ];
+        const csv = `\uFEFF${rows.map((row) => row.map(csvCell).join(',')).join('\r\n')}`;
+        const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `attendance-${cls.replace(/[^a-zA-Z0-9_-]/g, '-')}-${date}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+        toast('Attendance exported to CSV');
+    };
+
     const setStudentStatus = async (student, value) => {
         if (!canMark) {
             toast('You are not authorized to mark attendance', 'error');
@@ -140,10 +168,16 @@ export default function Attendance() {
     };
 
     const classOptions = Array.from(new Set(students.map((s) => `${s.class_grade}-${s.section}`)));
+    const canExport = profile && ['admin', 'super_admin'].includes(profile.role);
 
     return (<div className="p-4 lg:p-6">
-      <h2 className="font-display font-extrabold text-xl">Attendance Management</h2>
-      <p className="text-sm text-slate-500 mb-5">Mark and track daily attendance</p>
+      <div className="flex items-start justify-between gap-4 mb-5">
+        <div>
+          <h2 className="font-display font-extrabold text-xl">Attendance Management</h2>
+          <p className="text-sm text-slate-500">Mark and track daily attendance</p>
+        </div>
+        {canExport && <button onClick={exportAttendance} disabled={loading || filtered.length === 0} className="h-10 px-4 rounded-xl border border-slate-200 bg-white text-sm font-semibold flex items-center gap-2 disabled:cursor-not-allowed disabled:opacity-50"><i className="fa-solid fa-download"></i> Download CSV</button>}
+      </div>
       <div className="grid lg:grid-cols-[280px_1fr] gap-6">
         <div className="bg-white rounded-2xl border border-slate-200 p-5 h-fit">
           <label className="text-xs font-bold tracking-widest text-slate-500">SELECT CLASS</label>

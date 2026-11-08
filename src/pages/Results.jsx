@@ -26,6 +26,7 @@ export default function Results() {
 
     const canManage = profile && (profile.role === 'admin' || profile.role === 'super_admin' || profile.role === 'teacher');
     const canPostResults = profile && (profile.role === 'admin' || profile.role === 'super_admin');
+    const canDownloadResult = profile?.role === 'student' || profile?.role === 'parent';
 
     const load = useCallback(async () => {
         if (!profile) return;
@@ -105,6 +106,8 @@ export default function Results() {
         const child = roleMeta.children?.find((c) => c.id === selectedStudentId);
         return child || null;
     }, [profile, roleMeta, studentResults, students, selectedStudentId]);
+
+    const downloadResult = () => window.print();
 
     const studentOptions = useMemo(() => {
         if (profile?.role === 'parent') {
@@ -188,25 +191,42 @@ export default function Results() {
             {loading ? (
                 <div className="text-center text-slate-400 py-16">Loading results...</div>
             ) : (
-                <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+                <div className="results-print-area bg-white rounded-2xl border border-slate-200 overflow-hidden">
+                    <div className="results-print-only border-b border-slate-200 p-5">
+                        <div className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">{profile.organization_name || 'EduZaap School ERP'}</div>
+                        <div className="mt-1 text-xl font-bold text-slate-900">Student Result</div>
+                        <div className="mt-1 text-sm text-slate-500">Official exam performance report</div>
+                    </div>
                     <div className="p-4 border-b flex flex-wrap items-center justify-between gap-3">
                         <div className="font-bold">
                             {selectedStudent
                                 ? `Results — ${selectedStudent.full_name} (${selectedStudent.class_grade}-${selectedStudent.section})`
                                 : 'Exam Results'}
                         </div>
-                        {canPickStudent && studentOptions.length > 0 && (
-                            <select
-                                value={selectedStudentId}
-                                onChange={(e) => setSelectedStudentId(e.target.value)}
-                                className="h-9 px-3 rounded-xl border border-slate-200 bg-[#F8FAFC] text-sm font-semibold"
-                                aria-label="Select student"
-                            >
-                                {studentOptions.map((s) => (
-                                    <option key={s.id} value={s.id}>{s.label}</option>
-                                ))}
-                            </select>
-                        )}
+                        <div className="results-print-hide flex flex-wrap items-center gap-2">
+                            {canPickStudent && studentOptions.length > 0 && (
+                                <select
+                                    value={selectedStudentId}
+                                    onChange={(e) => setSelectedStudentId(e.target.value)}
+                                    className="h-9 px-3 rounded-xl border border-slate-200 bg-[#F8FAFC] text-sm font-semibold"
+                                    aria-label="Select student"
+                                >
+                                    {studentOptions.map((s) => (
+                                        <option key={s.id} value={s.id}>{s.label}</option>
+                                    ))}
+                                </select>
+                            )}
+                            {canDownloadResult && studentResults.length > 0 && (
+                                <button
+                                    type="button"
+                                    onClick={downloadResult}
+                                    className="h-9 px-3 rounded-xl bg-[#2563EB] text-white text-sm font-bold flex items-center gap-2 hover:bg-[#1D4ED8]"
+                                >
+                                    <i className="fa-solid fa-download" aria-hidden="true"></i>
+                                    Download Result
+                                </button>
+                            )}
+                        </div>
                     </div>
 
                     <div className="overflow-x-auto">
@@ -251,7 +271,7 @@ export default function Results() {
                     </div>
 
                     {studentResults.length > 0 && (
-                        <div className="p-4 bg-[#F8FAFC] flex flex-wrap gap-6 text-sm">
+                        <div className="results-summary p-4 bg-[#F8FAFC] flex flex-wrap gap-6 text-sm">
                             <span><b>Total:</b> {resultSummary.obtained}/{resultSummary.total}</span>
                             <span><b>Percentage:</b> {resultSummary.pct.toFixed(1)}%</span>
                             <span><b>Grade:</b> {pctToGrade(resultSummary.pct)}</span>
