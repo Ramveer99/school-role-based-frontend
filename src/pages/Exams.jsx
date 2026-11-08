@@ -38,7 +38,7 @@ export default function Exams() {
     const [editForm, setEditForm] = useState(null);
     const [saving, setSaving] = useState(false);
 
-    const canManage = profile && (profile.role === 'admin' || profile.role === 'super_admin' || profile.role === 'teacher');
+    const canManage = profile && (profile.role === 'admin' || profile.role === 'super_admin' );
 
     const load = useCallback(async () => {
         if (!profile) return;
