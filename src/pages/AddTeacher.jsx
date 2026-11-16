@@ -11,7 +11,7 @@ export default function AddTeacher() {
     const nav = useNavigate();
     const [defaultPassword, setDefaultPassword] = useState('');
     const [f, setF] = useState({
-        full_name: '', email: '', phone: '', employee_id: '',
+        full_name: '', email: '', phone: '', employee_id: '', national_id: '',
         department: 'Mathematics', subjects: '', classes: '', status: 'Active', joining_date: new Date().toISOString().slice(0, 10),
     });
     const [photo, setPhoto] = useState(null);
@@ -39,6 +39,7 @@ export default function AddTeacher() {
         try {
             await api.post('/api/teachers', {
                 ...f,
+                national_id: f.national_id.trim() || null,
                 email: f.email.trim(),
                 password: defaultPassword,
                 ...(photo ? { avatar_image: photo } : {}),
@@ -96,6 +97,10 @@ export default function AddTeacher() {
             <div>
               <label className="text-xs font-bold text-slate-600">Employee ID <span className="text-red-500">*</span></label>
               <input value={f.employee_id} onChange={e => setF({ ...f, employee_id: e.target.value })} placeholder="EMP-1024" className="mt-1.5 w-full h-11 px-3 rounded-xl border border-slate-200 text-sm"/>
+            </div>
+            <div>
+              <label className="text-xs font-bold text-slate-600">National ID</label>
+              <input value={f.national_id} onChange={e => setF({ ...f, national_id: e.target.value })} className="mt-1.5 w-full h-11 px-3 rounded-xl border border-slate-200 text-sm"/>
             </div>
             <div>
               <label className="text-xs font-bold text-slate-600">Department</label>

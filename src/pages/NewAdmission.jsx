@@ -17,7 +17,7 @@ export default function NewAdmission() {
     const [organizationId, setOrganizationId] = useState('');
     const [stu, setStu] = useState({
         full_name: '', email: '', admission_no: '', roll_no: '', class_grade: '10', section: 'A',
-        gender: 'Male', dob: '', phone: '', address: '', teacher_id: '',
+        gender: 'Male', dob: '', phone: '', pan_number: '', address: '', teacher_id: '',
     });
     const [stuPhoto, setStuPhoto] = useState(null);
     const [parPhoto, setParPhoto] = useState(null);
@@ -168,6 +168,7 @@ export default function NewAdmission() {
               <div><label className="text-xs font-bold text-slate-600">Gender</label><select value={stu.gender} onChange={e => setStu({ ...stu, gender: e.target.value })} className="mt-1.5 w-full h-11 px-3 rounded-xl border border-slate-200 text-sm bg-white"><option>Male</option><option>Female</option><option>Other</option></select></div>
               <div><label className="text-xs font-bold text-slate-600">Date of Birth</label><input type="date" value={stu.dob} onChange={e => setStu({ ...stu, dob: e.target.value })} className="mt-1.5 w-full h-11 px-3 rounded-xl border border-slate-200 text-sm"/></div>
               <div><label className="text-xs font-bold text-slate-600">Phone</label><input value={stu.phone} onChange={e => setStu({ ...stu, phone: e.target.value })} placeholder="+91 ..." className="mt-1.5 w-full h-11 px-3 rounded-xl border border-slate-200 text-sm"/></div>
+              <div><label className="text-xs font-bold text-slate-600">PAN Number</label><input value={stu.pan_number} onChange={e => setStu({ ...stu, pan_number: e.target.value })} className="mt-1.5 w-full h-11 px-3 rounded-xl border border-slate-200 text-sm uppercase"/></div>
               <div className="md:col-span-2"><label className="text-xs font-bold text-slate-600">Address</label><textarea value={stu.address} onChange={e => setStu({ ...stu, address: e.target.value })} rows={2} className="mt-1.5 w-full px-3 py-2 rounded-xl border border-slate-200 text-sm"/></div>
               <div className="md:col-span-2">
                 <label className="text-xs font-bold text-slate-600">Assign Class Teacher</label>
@@ -234,7 +235,7 @@ export default function NewAdmission() {
               <div className="rounded-2xl border border-slate-200 p-4">
                 <div className="font-bold mb-3 flex items-center gap-2"><i className="fa-solid fa-user-graduate text-[#2563EB]"></i> Student</div>
                 <div className="space-y-2 text-sm">
-                  <Row k="Name" v={stu.full_name}/><Row k="Email" v={stu.email}/><Row k="Password" v="password123"/><Row k="Admission No" v={stu.admission_no}/><Row k="Class" v={`${stu.class_grade}-${stu.section}`}/><Row k="Roll" v={stu.roll_no || '—'}/><Row k="Gender" v={stu.gender}/><Row k="DOB" v={stu.dob || '—'}/><Row k="Phone" v={stu.phone || '—'}/><Row k="Teacher" v={teachers.find(t => String(t.id) === String(stu.teacher_id))?.full_name || 'Unassigned'}/>
+                  <Row k="Name" v={stu.full_name}/><Row k="Email" v={stu.email}/><Row k="Password" v="password123"/><Row k="Admission No" v={stu.admission_no}/><Row k="Class" v={`${stu.class_grade}-${stu.section}`}/><Row k="Roll" v={stu.roll_no || '—'}/><Row k="Gender" v={stu.gender}/><Row k="DOB" v={stu.dob || '—'}/><Row k="Phone" v={stu.phone || '—'}/><Row k="PAN Number" v={stu.pan_number || '—'}/><Row k="Teacher" v={teachers.find(t => String(t.id) === String(stu.teacher_id))?.full_name || 'Unassigned'}/>
                 </div>
               </div>
               <div className="rounded-2xl border border-slate-200 p-4">

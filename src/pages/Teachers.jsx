@@ -68,6 +68,7 @@ export default function Teachers() {
                 email: record.email || '',
                 phone: record.phone || '',
                 employee_id: record.employee_id || '',
+                national_id: record.national_id || '',
                 department: record.department || 'Mathematics',
                 subjects: record.subjects || '',
                 classes: record.classes || '',
@@ -91,7 +92,10 @@ export default function Teachers() {
         setSaving(true);
         try {
             const { profile_id, avatar_url, avatar_image, ...fields } = editForm;
-            await api.put(`/api/teachers/${editRecord.id}`, fields);
+            await api.patch(`/api/teachers/${editRecord.id}`, {
+                ...fields,
+                national_id: editForm.national_id.trim() || null,
+            });
             if (avatar_image && profile_id) {
                 await api.uploadProfileAvatarImage(profile_id, avatar_image);
             }
@@ -134,6 +138,7 @@ export default function Teachers() {
               <tr>
                 <th className="text-left px-4 py-3">Teacher</th>
                 <th className="text-left px-4 py-3">Employee ID</th>
+                <th className="text-left px-4 py-3">National ID</th>
                 <th className="text-left px-4 py-3">Department</th>
                 <th className="text-left px-4 py-3">Subjects</th>
                 <th className="text-left px-4 py-3">Classes</th>
@@ -143,11 +148,12 @@ export default function Teachers() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {loading && <tr><td colSpan={8} className="px-4 py-8 text-center text-slate-400">Loading...</td></tr>}
-              {!loading && filtered.length === 0 && <tr><td colSpan={8} className="px-4 py-10 text-center text-slate-400">No teachers yet. Click “Add Teacher” to create one.</td></tr>}
+              {loading && <tr><td colSpan={9} className="px-4 py-8 text-center text-slate-400">Loading...</td></tr>}
+              {!loading && filtered.length === 0 && <tr><td colSpan={9} className="px-4 py-10 text-center text-slate-400">No teachers yet. Click “Add Teacher” to create one.</td></tr>}
               {filtered.map(t => (<tr key={t.id} className="hover:bg-slate-50/60">
                   <td className="px-4 py-3"><div className="flex items-center gap-3"><AvatarImg src={t.avatar_url} name={t.full_name} colors="2563EB,0EA5E9,10B981" className="w-9 h-9 rounded-full bg-white object-cover"/><div><div className="font-semibold">{t.full_name}</div><div className="text-xs text-slate-500">{t.phone || '—'}</div></div></div></td>
                   <td className="px-4 py-3 font-mono text-xs">{t.employee_id}</td>
+                  <td className="px-4 py-3 font-mono text-xs">{t.national_id || '—'}</td>
                   <td className="px-4 py-3">{t.department}</td>
                   <td className="px-4 py-3 text-slate-600">{t.subjects || '—'}</td>
                   <td className="px-4 py-3 text-slate-600">{t.classes || '—'}</td>
@@ -179,6 +185,7 @@ export default function Teachers() {
             <div className="grid grid-cols-2 gap-4">
               <DetailField label="Email" value={viewRecord.email}/>
               <DetailField label="Phone" value={viewRecord.phone}/>
+              <DetailField label="National ID" value={viewRecord.national_id}/>
               <DetailField label="Department" value={viewRecord.department}/>
               <DetailField label="Subjects" value={viewRecord.subjects}/>
               <DetailField label="Classes" value={viewRecord.classes}/>
@@ -208,6 +215,7 @@ export default function Teachers() {
             <FormField label="Full Name" required><input value={editForm.full_name} onChange={e => setEditForm({ ...editForm, full_name: e.target.value })} className={inputClass}/></FormField>
             <FormField label="Email" required><input type="email" value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })} className={inputClass}/></FormField>
             <FormField label="Employee ID" required><input value={editForm.employee_id} onChange={e => setEditForm({ ...editForm, employee_id: e.target.value })} className={inputClass}/></FormField>
+            <FormField label="National ID"><input value={editForm.national_id} onChange={e => setEditForm({ ...editForm, national_id: e.target.value })} className={inputClass}/></FormField>
             <FormField label="Phone"><input value={editForm.phone} onChange={e => setEditForm({ ...editForm, phone: e.target.value })} className={inputClass}/></FormField>
             <FormField label="Department"><select value={editForm.department} onChange={e => setEditForm({ ...editForm, department: e.target.value })} className={`${inputClass} bg-white`}>{DEPTS.map(d => <option key={d}>{d}</option>)}</select></FormField>
             <FormField label="Status"><select value={editForm.status} onChange={e => setEditForm({ ...editForm, status: e.target.value })} className={`${inputClass} bg-white`}><option>Active</option><option>On Leave</option><option>Inactive</option></select></FormField>
