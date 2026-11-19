@@ -159,8 +159,6 @@ export default function Students() {
               {!loading && filtered.length === 0 && <tr><td colSpan={10} className="px-4 py-10 text-center text-slate-400">No students found. Create a new admission.</td></tr>}
               {filtered.map(s => (<tr key={s.id} className="hover:bg-slate-50/60">
                   <td className="px-4 py-3"><div className="flex items-center gap-3"><AvatarImg src={s.avatar_url} name={s.full_name} colors="2563EB,0EA5E9,10B981" className="w-9 h-9 rounded-full bg-white object-cover"/><div><div className="font-semibold">{s.full_name}</div><div className="text-xs text-slate-500">Roll {s.roll_no}</div></div></div></td>
-                  
-                  {console.log("hhh---->>",s)}
                   <td className="px-4 py-3 font-mono text-xs">{s.admission_no}</td>
                   <td className="px-4 py-3 font-mono text-xs">{s.pan_number || '—'}</td>
                   <td className="px-4 py-3"><span className="px-2.5 py-1 rounded-full bg-blue-50 text-[#2563EB] text-xs font-bold">{s.class_grade}-{s.section}</span></td>
@@ -185,8 +183,6 @@ export default function Students() {
           <span className="text-xs text-slate-500">{filtered.length} of {rows.length} students</span>
         </div>
       </div>
-      {console.log("hhh",viewRecord)}
-
       <RecordModal open={!!viewRecord} onClose={() => setViewRecord(null)} title="Student Details">
         {viewRecord && (<div className="space-y-4">
             <div className="flex items-center gap-4 pb-4 border-b border-slate-100">

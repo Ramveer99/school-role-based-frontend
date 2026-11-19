@@ -17,9 +17,9 @@ supabase/.branches
 supabase/.temp
 
 node_modules
-#dist
-#dist-ssr
+
 *.local
+.school-role-based-backend
 
 # Editor directories and files
 .vscode/*

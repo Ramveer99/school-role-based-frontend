@@ -1,27 +1,3 @@
-// import { useEffect, useState } from 'react';
-// import { avatarFallback, hasAvatar, resolveAvatarUrl } from '../lib/avatar';
-
-// export function AvatarImg({ src, name, colors, className = '', alt }) {
-//   const [failed, setFailed] = useState(false);
-
-//   useEffect(() => {
-//     setFailed(false);
-//   }, [src, name]);
-
-//   const resolved = !hasAvatar(src) || failed
-//     ? avatarFallback(name, colors)
-//     : resolveAvatarUrl(src, name, colors);
-
-//   return (
-//     <img
-//       src={resolved}
-//       alt={alt || name || 'Avatar'}
-//       className={className}
-//       onError={() => setFailed(true)}
-//     />
-//   );
-// }
-
 import { useState } from 'react';
 
 import {
