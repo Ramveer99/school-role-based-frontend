@@ -118,7 +118,7 @@ export default function Teachers() {
           <h2 className="font-display font-extrabold text-xl">Teachers Management</h2>
           <p className="text-sm text-slate-500">Faculty directory and assignments</p>
         </div>
-        {canAdd && <Link to="/teachers/new" className="h-10 px-5 rounded-xl bg-[#2563EB] text-white text-sm font-bold flex items-center gap-2"><i className="fa-solid fa-plus"></i> Add Teacher</Link>}
+        {/* {canAdd && <Link to="/teachers/new" className="h-10 px-5 rounded-xl bg-[#2563EB] text-white text-sm font-bold flex items-center gap-2"><i className="fa-solid fa-plus"></i> Add Teacher</Link>} */}
       </div>
 
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
