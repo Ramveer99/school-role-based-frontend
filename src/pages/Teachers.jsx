@@ -50,6 +50,7 @@ export default function Teachers() {
         catch (e) {
             toast(e.message, 'error');
         }
+        // hello
     };
     const openView = async (id) => {
         try {
